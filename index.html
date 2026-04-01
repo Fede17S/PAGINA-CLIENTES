@@ -8,20 +8,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
-            /* Nueva paleta: Azul Profundo a Naranja Vibrante */
-            --grad-start: #1e3a8a; /* Azul */
-            --grad-end: #f97316;   /* Naranja */
+            --grad-start: #1e3a8a;
+            --grad-end: #f97316;
             --bg-soft: #f8fafc;
             --text-main: #1e293b;
             --text-second: #64748b;
             --white: #ffffff;
             --border-light: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
 
         body {
             font-family: 'Inter', 'Segoe UI', Helvetica, Arial, sans-serif;
-            /* Degradado de fondo aplicado a todo el sitio */
             background: linear-gradient(135deg, var(--grad-start) 0%, var(--grad-end) 100%);
             background-attachment: fixed;
             color: var(--text-main);
@@ -30,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* --- INPUTS Y BOTONES MINIMALISTAS --- */
         input {
             width: 100%;
             padding: 12px 16px;
@@ -47,7 +44,7 @@
             outline: none;
             border-color: var(--grad-end);
             background-color: var(--white);
-            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+            box-shadow: 0 0 0 4px rgba(249,115,22,0.1);
         }
 
         .btn {
@@ -63,21 +60,20 @@
         }
 
         .btn:active { transform: scale(0.98); }
-
         .btn-blue { background-color: var(--grad-start); }
         .btn-green { background-color: #10b981; }
 
         .hidden { display: none !important; }
 
-        /* --- PANTALLA DE LOGUEO --- */
+        /* --- LOGIN --- */
         .login-box {
             max-width: 380px;
             margin: 15vh auto;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             padding: 40px;
             border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
             text-align: center;
         }
 
@@ -94,7 +90,7 @@
             font-size: 14px;
         }
 
-        /* --- PANEL DE LA TIENDA --- */
+        /* --- CATÁLOGO --- */
         #catalog-section {
             background-color: var(--bg-soft);
             min-height: 100vh;
@@ -119,13 +115,13 @@
         input#search {
             margin: 0;
             border: none;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255,255,255,0.2);
             color: white;
             border-radius: 12px;
             backdrop-filter: blur(5px);
         }
 
-        input#search::placeholder { color: rgba(255, 255, 255, 0.8); }
+        input#search::placeholder { color: rgba(255,255,255,0.8); }
 
         .catalog-container {
             max-width: 1100px;
@@ -133,7 +129,7 @@
             padding: 20px 15px 100px 15px;
         }
 
-        /* --- TARJETAS DE PRODUCTO --- */
+        /* --- TARJETAS --- */
         #product-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -163,7 +159,6 @@
         }
 
         .prod-img { width: 100%; height: 100%; object-fit: contain; }
-
         .prod-info { padding: 15px; flex: 1; }
 
         .prod-name {
@@ -189,6 +184,33 @@
             border-top: 1px solid var(--bg-soft);
         }
 
+        /* --- SELECTOR DE CANTIDAD --- */
+        .qty-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-soft);
+            border-radius: 10px;
+            padding: 4px 10px;
+        }
+
+        .qty-selector button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 4px;
+            color: var(--grad-end);
+        }
+
+        .qty-selector span {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
         /* --- CARRITO FLOTANTE --- */
         .cart-float {
             position: fixed;
@@ -198,24 +220,139 @@
             color: white;
             padding: 15px 25px;
             border-radius: 50px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
             z-index: 1000;
+            transition: transform 0.2s;
         }
 
-        /* --- MODAL --- */
+        .cart-float:active { transform: scale(0.96); }
+
+        /* --- MODAL CARRITO --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+        }
+
+        @media (min-width: 600px) {
+            .modal-overlay {
+                align-items: center;
+                padding: 20px;
+            }
+        }
+
         .modal-content {
-            border-radius: 24px !important;
-            padding: 30px !important;
+            background: var(--white);
+            border-radius: 24px 24px 0 0;
+            padding: 30px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+            box-sizing: border-box;
         }
 
+        @media (min-width: 600px) {
+            .modal-content {
+                border-radius: 24px;
+                animation: fadeIn 0.2s ease;
+            }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--text-main);
+        }
+
+        .modal-header button {
+            background: var(--bg-soft);
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-second);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-right: 4px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-light);
+            padding-top: 20px;
+        }
+
+        /* --- ITEMS DEL CARRITO --- */
+        .cart-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--bg-soft);
+            border-radius: 14px;
+        }
+
+        .cart-item b { font-size: 14px; color: var(--text-main); }
+        .cart-item small { color: var(--text-second); font-size: 12px; }
+
+        /* --- TOAST --- */
         #toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
             background-color: var(--text-main);
+            color: white;
             border-radius: 12px;
-            padding: 15px 30px;
+            padding: 12px 28px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 3000;
+            white-space: nowrap;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -223,7 +360,7 @@
 
     <div id="toast">Producto agregado</div>
 
-    <!-- PANTALLA DE LOGUEO -->
+    <!-- LOGIN -->
     <div id="login-section" class="login-box">
         <h2>DISTRIMAR</h2>
         <p>Premium Distribution Service</p>
@@ -235,19 +372,18 @@
         </button>
     </div>
 
-    <!-- SECCIÓN CATÁLOGO -->
+    <!-- CATÁLOGO -->
     <div id="catalog-section" class="hidden">
         <div class="header-store">
             <h3 id="welcome-msg">Bienvenido</h3>
             <input type="text" id="search" placeholder="Buscar productos por nombre o código..." oninput="renderCatalog()">
         </div>
-        
         <div class="catalog-container">
             <div id="product-list"></div>
         </div>
     </div>
 
-    <!-- BOTÓN CARRITO -->
+    <!-- BOTÓN CARRITO FLOTANTE -->
     <div id="cart-btn" class="cart-float hidden" onclick="openCart()">
         <span>🛒</span>
         <span id="cart-count" style="background: var(--grad-end); padding: 2px 8px; border-radius: 8px; font-size: 12px;">0</span>
@@ -255,25 +391,24 @@
     </div>
 
     <!-- MODAL CARRITO -->
-    <div id="cart-modal" class="modal-overlay hidden">
+    <div id="cart-modal" class="modal-overlay hidden" onclick="handleOverlayClick(event)">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Tu Pedido</h3>
-                <button onclick="closeCart()" style="background:none; border:none; font-size:24px; cursor:pointer;">×</button>
+                <h3>🛒 Tu Pedido</h3>
+                <button onclick="closeCart()">×</button>
             </div>
             <div id="cart-items" class="modal-body"></div>
             <div class="modal-footer">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                    <span style="color: var(--text-second);">Total Estimado:</span>
-                    <span style="font-size: 24px; font-weight: 700; color: var(--grad-start);">$<span id="cart-total-modal">0</span></span>
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <span style="color:var(--text-second); font-size:16px;">Total Estimado:</span>
+                    <span style="font-size:24px; font-weight:700; color:var(--grad-start);">$<span id="cart-total-modal">0</span></span>
                 </div>
-                <button class="btn btn-green" onclick="checkout()">CONFIRMAR PEDIDO</button>
+                <button class="btn btn-green" onclick="checkout()">CONFIRMAR PEDIDO 📄</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- LA LÓGICA JS SE MANTIENE IGUAL A TU ORIGINAL ---
         let dbStock = [], dbCli = [], currentUser = null, cart = [];
         const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
         const URL_CLI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
@@ -297,7 +432,7 @@
         async function login() {
             const idInput = document.getElementById('user-id').value.trim();
             const passInput = document.getElementById('user-pass').value.trim();
-            if(!idInput) return alert("Ingresa tu ID");
+            if (!idInput) return alert("Ingresa tu ID");
             document.getElementById('status-msg').classList.remove('hidden');
             try {
                 const [resS, resC] = await Promise.all([fetch(URL_STK), fetch(URL_CLI)]);
@@ -310,9 +445,9 @@
                     dbStock = rawStk.map((r, index) => {
                         let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
                         let pLimpio = precio.replace('$','').replace('.','').replace(',','.');
-                        return { 
-                            internalId: index, id: r[0], n: r[1], 
-                            p: parseFloat(pLimpio) || 0, 
+                        return {
+                            internalId: index, id: r[0], n: r[1],
+                            p: parseFloat(pLimpio) || 0,
                             img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar"
                         };
                     });
@@ -343,9 +478,9 @@
                     </div>
                     <div class="prod-action-row">
                         <div class="qty-selector">
-                            <button onclick="changeQty('${spanId}', -1)" style="color:var(--grad-end)">-</button>
+                            <button onclick="changeQty('${spanId}', -1)">−</button>
                             <span id="${spanId}">1</span>
-                            <button onclick="changeQty('${spanId}', 1)" style="color:var(--grad-end)">+</button>
+                            <button onclick="changeQty('${spanId}', 1)">+</button>
                         </div>
                         <button class="btn btn-blue" style="width:auto; padding:8px 15px; font-size:12px;" onclick="addToCart(${p.internalId})">AÑADIR</button>
                     </div>
@@ -373,7 +508,8 @@
 
         function showToast(msg) {
             const t = document.getElementById('toast');
-            t.innerText = msg; t.style.opacity = "1";
+            t.innerText = msg;
+            t.style.opacity = "1";
             setTimeout(() => { t.style.opacity = "0"; }, 2000);
         }
 
@@ -385,7 +521,9 @@
                 btn.classList.remove('hidden');
                 document.getElementById('cart-count').innerText = totalUnidades;
                 document.getElementById('cart-total-float').innerText = totalPlata.toLocaleString('es-AR');
-            } else { btn.classList.add('hidden'); }
+            } else {
+                btn.classList.add('hidden');
+            }
         }
 
         function openCart() {
@@ -398,9 +536,12 @@
                 const div = document.createElement('div');
                 div.className = "cart-item";
                 div.innerHTML = `
-                    <div style="flex:1"><b>${item.producto.n}</b><br><small>${item.cantidad} x $${item.producto.p}</small></div>
-                    <div style="font-weight:bold">$${sub.toLocaleString('es-AR')}</div>
-                    <button onclick="removeItem(${item.producto.internalId})" style="border:none; background:none; cursor:pointer; margin-left:10px;">🗑️</button>
+                    <div style="flex:1">
+                        <b>${item.producto.n}</b><br>
+                        <small>${item.cantidad} x $${item.producto.p.toLocaleString('es-AR')}</small>
+                    </div>
+                    <div style="font-weight:bold; white-space:nowrap;">$${sub.toLocaleString('es-AR')}</div>
+                    <button onclick="removeItem(${item.producto.internalId})" style="border:none; background:none; cursor:pointer; font-size:18px; margin-left:6px;">🗑️</button>
                 `;
                 list.appendChild(div);
             });
@@ -408,13 +549,20 @@
             document.getElementById('cart-modal').classList.remove('hidden');
         }
 
+        function handleOverlayClick(event) {
+            if (event.target === document.getElementById('cart-modal')) closeCart();
+        }
+
         function removeItem(id) {
             cart = cart.filter(i => i.producto.internalId !== id);
             actualizarBotonFlotante();
-            if (cart.length > 0) openCart(); else closeCart();
+            if (cart.length > 0) openCart();
+            else closeCart();
         }
 
-        function closeCart() { document.getElementById('cart-modal').classList.add('hidden'); }
+        function closeCart() {
+            document.getElementById('cart-modal').classList.add('hidden');
+        }
 
         async function checkout() {
             const { jsPDF } = window.jspdf;
@@ -426,9 +574,12 @@
                 head: [['Cant', 'Producto', 'Subtotal']],
                 body: cart.map(i => [i.cantidad, i.producto.n, `$${(i.producto.p * i.cantidad).toFixed(2)}`]),
             });
-            doc.save("pedido.pdf");
+            doc.text(`Total: $${total.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 10);
+            doc.save("pedido_distrimar.pdf");
             alert("Pedido descargado satisfactoriamente.");
-            cart = []; actualizarBotonFlotante(); closeCart();
+            cart = [];
+            actualizarBotonFlotante();
+            closeCart();
         }
     </script>
 </body>
