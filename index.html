@@ -17,13 +17,11 @@
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
         
-        /* Estilos de la tarjeta de producto */
         .prod-card { display: flex; flex-direction: column; padding: 15px 10px; border-bottom: 1px solid #eee; gap: 10px; }
         .prod-main { display: flex; align-items: center; gap: 10px; }
         .prod-img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
         .prod-info { flex: 1; }
         
-        /* Controles de cantidad */
         .prod-action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; background: #f9f9f9; padding: 8px; border-radius: 8px; }
         .qty-selector { display: flex; align-items: center; gap: 15px; background: white; border: 1px solid #ddd; border-radius: 6px; padding: 2px 10px; }
         .qty-selector button { background: none; border: none; font-size: 20px; font-weight: bold; color: var(--blue); cursor: pointer; padding: 0 5px; }
@@ -31,10 +29,8 @@
 
         .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px; }
         
-        /* Notificación Toast (Reemplaza al Alert) */
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 
-        /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 95%; max-width: 500px; max-height: 85vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -118,11 +114,17 @@
 
                 if (currentUser && idInput === passInput) {
                     const rawStk = parseCSV(txtS);
-                    dbStock = rawStk.map(r => {
+                    dbStock = rawStk.map((r, index) => {
                         let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
                         let pLimpio = precio.replace('$','').replace('.','').replace(',','.');
                         let img = r[4] && r[4].trim() !== "" ? r[4] : "https://via.placeholder.com/70x70.png?text=Sin+Foto";
-                        return { id: r[0], n: r[1], p: parseFloat(pLimpio) || 0, img: img };
+                        return { 
+                            internalId: index, // ID interno para que no falle el buscador
+                            id: r[0], 
+                            n: r[1], 
+                            p: parseFloat(pLimpio) || 0, 
+                            img: img 
+                        };
                     });
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('catalog-section').classList.remove('hidden');
@@ -142,8 +144,7 @@
             const filtered = dbStock.filter(p => p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
             
             filtered.forEach(p => {
-                // Usamos un ID único para el span de cantidad basado en el ID del producto
-                const spanId = `qty-val-${p.id.replace(/\s+/g, '-')}`;
+                const spanId = `qty-val-${p.internalId}`;
                 const div = document.createElement('div');
                 div.className = "prod-card";
                 div.innerHTML = `
@@ -162,7 +163,7 @@
                             <button onclick="changeQty('${spanId}', 1)">+</button>
                         </div>
                         <button class="btn btn-blue" style="width:auto; margin:0; padding:8px 15px;" 
-                                onclick="addToCart('${p.id}', '${spanId}')">🛒 AGREGAR</button>
+                                onclick="addToCart(${p.internalId})">🛒 AGREGAR</button>
                     </div>
                 `;
                 list.appendChild(div);
@@ -177,21 +178,21 @@
             el.innerText = val;
         }
 
-        function addToCart(prodId, spanId) {
-            const qty = parseInt(document.getElementById(spanId).innerText);
-            const product = dbStock.find(p => p.id === prodId);
+        function addToCart(internalId) {
+            const product = dbStock.find(p => p.internalId === internalId);
+            const qtyElement = document.getElementById(`qty-val-${internalId}`);
+            const qty = parseInt(qtyElement.innerText);
             
             if (!product) return;
 
-            let existing = cart.find(i => i.producto.id === prodId);
+            let existing = cart.find(i => i.producto.internalId === internalId);
             if (existing) {
                 existing.cantidad += qty;
             } else {
                 cart.push({ producto: product, cantidad: qty });
             }
             
-            // Resetear a 1 el selector visual
-            document.getElementById(spanId).innerText = "1";
+            qtyElement.innerText = "1"; // Resetear cantidad en la interfaz
             
             showToast(`Agregado: ${qty} x ${product.n}`);
             actualizarBotonFlotante();
@@ -229,9 +230,9 @@
                 const div = document.createElement('div');
                 div.className = "cart-item";
                 div.innerHTML = `
-                    <div style="flex:1"><b>${item.producto.n}</b><br><small>${item.cantidad} x $${item.producto.p}</small></div>
+                    <div style="flex:1"><b>${item.producto.n}</b><br><small>${item.cantidad} x $${item.producto.p.toLocaleString('es-AR')}</small></div>
                     <div style="font-weight:bold">$${sub.toLocaleString('es-AR')}</div>
-                    <button onclick="removeItem('${item.producto.id}')" style="margin-left:10px; border:none; background:none; color:red; font-size:18px;">🗑️</button>
+                    <button onclick="removeItem(${item.producto.internalId})" style="margin-left:10px; border:none; background:none; color:red; font-size:18px;">🗑️</button>
                 `;
                 list.appendChild(div);
             });
@@ -239,8 +240,8 @@
             document.getElementById('cart-modal').classList.remove('hidden');
         }
 
-        function removeItem(id) {
-            cart = cart.filter(i => i.producto.id !== id);
+        function removeItem(internalId) {
+            cart = cart.filter(i => i.producto.internalId !== internalId);
             actualizarBotonFlotante();
             if (cart.length > 0) openCart(); else closeCart();
         }
@@ -258,15 +259,19 @@
             doc.autoTable({
                 startY: 40,
                 head: [['Cant', 'Producto', 'Subtotal']],
-                body: cart.map(i => [i.cantidad, i.producto.n, `$${(i.producto.p * i.cantidad).toFixed(2)}`]),
-                foot: [['', 'TOTAL', `$${total.toFixed(2)}`]]
+                body: cart.map(i => [i.cantidad, i.producto.n, `$${(i.producto.p * i.cantidad).toLocaleString('es-AR')}`]),
+                foot: [['', 'TOTAL', `$${total.toLocaleString('es-AR')}`]]
             });
 
             const blob = doc.output('blob');
             const file = new File([blob], `Pedido_${currentUser.nom}.pdf`, { type: 'application/pdf' });
 
             if (navigator.share) {
-                await navigator.share({ files: [file], text: `Pedido de ${currentUser.nom}` });
+                try {
+                    await navigator.share({ files: [file], text: `Pedido de ${currentUser.nom}` });
+                } catch (e) {
+                    doc.save(`Pedido_${currentUser.nom}.pdf`);
+                }
             } else {
                 doc.save(`Pedido_${currentUser.nom}.pdf`);
             }
