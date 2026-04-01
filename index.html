@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DistriMar - Pedidos Online</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --blue: #0056b3; --green: #25d366; --bg: #f4f7f6; --text: #333; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        .login-box, .catalog-box { max-width: 500px; margin: 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; display: block; text-align: center; text-decoration: none; }
+        .btn-blue { background: var(--blue); }
+        .btn-green { background: var(--green); }
+        .prod-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; }
+        .loading { color: var(--blue); font-weight: bold; text-align: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="login-section" class="login-box">
+        <h2 style="text-align:center">DISTRIMAR</h2>
+        <p style="text-align:center; font-size: 14px; color: #666;">Acceso Exclusivo Clientes</p>
+        <div id="status-msg" class="loading hidden">Cargando base de datos...</div>
+        <input type="text" id="user-id" placeholder="ID de Cliente">
+        <input type="password" id="user-pass" placeholder="Contraseña (Tu ID)">
+        <button class="btn btn-blue" id="btn-login" onclick="login()">INGRESAR</button>
+    </div>
+
+    <div id="catalog-section" class="catalog-box hidden">
+        <h3 id="welcome-msg">Hola!</h3>
+        <input type="text" id="search" placeholder="🔍 Buscar productos..." oninput="renderCatalog()">
+        <div id="product-list"></div>
+    </div>
+
+    <div id="cart-btn" class="cart-float hidden" onclick="checkout()">
+        🛒 Enviar Pedido (<span id="cart-count">0</span>)
+    </div>
+
+    <script>
+        let dbStock = [], dbCli = [], currentUser = null, cart = [];
+
+        // URLs originales de tu sistema
+        const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
+        const URL_CLI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
+
+        // Función para limpiar y procesar CSV correctamente
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            const sep = lines[0].includes(';') ? ';' : ',';
+            return lines.slice(1).map(line => {
+                // Maneja valores entre comillas
+                const values = [];
+                let current = '', inQuotes = false;
+                for (let char of line) {
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === sep && !inQuotes) { values.push(current.trim()); current = ''; }
+                    else current += char;
+                }
+                values.push(current.trim());
+                return values.map(v => v.replace(/"/g, ''));
+            });
+        }
+
+        async function login() {
+            const idInput = document.getElementById('user-id').value.trim();
+            const passInput = document.getElementById('user-pass').value.trim();
+            const status = document.getElementById('status-msg');
+            const btn = document.getElementById('btn-login');
+
+            if(!idInput) return alert("Ingresa tu ID");
+
+            status.classList.remove('hidden');
+            btn.disabled = true;
+
+            try {
+                // Fetch con cache neutralizado para evitar datos viejos
+                const [resS, resC] = await Promise.all([
+                    fetch(URL_STK + '&cache=' + Date.now()),
+                    fetch(URL_CLI + '&cache=' + Date.now())
+                ]);
+
+                const txtS = await resS.text();
+                const txtC = await resC.text();
+
+                const rawCli = parseCSV(txtC);
+                dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2] || "Clientes" }));
+                
+                // Buscamos al cliente
+                currentUser = dbCli.find(c => c.id === idInput);
+
+                // Validamos (ID como usuario y contraseña)
+                if (currentUser && idInput === passInput) {
+                    const rawStk = parseCSV(txtS);
+                    dbStock = rawStk.map(r => {
+                        let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
+                        // Limpiar precio de símbolos y comas
+                        let pLimpio = precio.replace('$','').replace('.','').replace(',','.');
+                        return { id: r[0], n: r[1], p: parseFloat(pLimpio) || 0 };
+                    });
+
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('catalog-section').classList.remove('hidden');
+                    document.getElementById('welcome-msg').innerText = `Bienvenido/a, ${currentUser.nom}`;
+                    renderCatalog();
+                } else {
+                    alert("ID o Contraseña incorrectos. Verifica que sean iguales.");
+                    status.classList.add('hidden');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión. Asegúrate de tener internet.");
+                status.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        function renderCatalog() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const list = document.getElementById('product-list');
+            list.innerHTML = "";
+            
+            const filtered = dbStock.filter(p => p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
+            
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = "prod-card";
+                div.innerHTML = `
+                    <div style="flex:1">
+                        <small style="color: #888">#${p.id}</small><br>
+                        <b>${p.n}</b><br>
+                        <span style="color: var(--blue); font-weight: bold">$${p.p.toLocaleString('es-AR', {minimumFractionDigits:2})}</span>
+                    </div>
+                    <button class="btn btn-blue" style="width:auto; padding: 8px 15px;" onclick="addToCart('${p.id}')">Añadir</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addToCart(id) {
+            const p = dbStock.find(x => x.id === id);
+            cart.push(p);
+            const btn = document.getElementById('cart-btn');
+            btn.classList.remove('hidden');
+            document.getElementById('cart-count').innerText = cart.length;
+            
+            // Animación simple de feedback
+            btn.style.transform = "scale(1.1)";
+            setTimeout(() => btn.style.transform = "scale(1)", 200);
+        }
+
+        async function checkout() {
+            if (cart.length === 0) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const total = cart.reduce((s, x) => s + x.p, 0);
+            
+            doc.setFontSize(18);
+            doc.text("PEDIDO DISTRIMAR", 105, 20, {align: 'center'});
+            
+            doc.setFontSize(12);
+            doc.text(`Cliente: ${currentUser.nom} (ID: ${currentUser.id})`, 14, 30);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 37);
+
+            doc.autoTable({
+                startY: 45,
+                head: [['Cant', 'Producto', 'Precio']],
+                body: cart.map(i => [1, i.n, `$${i.p.toFixed(2)}`]),
+                foot: [['', 'TOTAL', `$${total.toFixed(2)}`]],
+                headStyles: { fillColor: [0, 86, 179] }
+            });
+
+            const blob = doc.output('blob');
+            const file = new File([blob], `Pedido_${currentUser.nom}.pdf`, { type: 'application/pdf' });
+
+            try {
+                if (navigator.share) {
+                    await navigator.share({
+                        title: 'Pedido DistriMar',
+                        text: `Hola! Soy ${currentUser.nom}, envío mi pedido.`,
+                        files: [file]
+                    });
+                } else {
+                    doc.save(`Pedido_${currentUser.nom}.pdf`);
+                    alert("PDF descargado. Por favor envíalo por WhatsApp.");
+                }
+            } catch (err) {
+                console.error("Error al compartir", err);
+            }
+        }
+    </script>
+</body>
+</html>
