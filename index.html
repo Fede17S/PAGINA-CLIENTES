@@ -16,34 +16,33 @@
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; display: block; text-align: center; }
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
-        .btn-red { background: var(--red); }
         
-        /* Estilos de la tarjeta de producto con imagen */
-        .prod-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
-        .prod-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        /* Estilos de la tarjeta de producto */
+        .prod-card { display: flex; flex-direction: column; padding: 15px 10px; border-bottom: 1px solid #eee; gap: 10px; }
+        .prod-main { display: flex; align-items: center; gap: 10px; }
+        .prod-img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
         .prod-info { flex: 1; }
         
-        .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px; }
+        /* Controles de cantidad en catálogo */
+        .prod-action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; background: #f9f9f9; padding: 8px; border-radius: 8px; }
+        .qty-selector { display: flex; align-items: center; gap: 15px; background: white; border: 1px solid #ddd; border-radius: 6px; padding: 2px 10px; }
+        .qty-selector button { background: none; border: none; font-size: 20px; font-weight: bold; color: var(--blue); cursor: pointer; padding: 0 5px; }
+        .qty-selector span { font-weight: bold; min-width: 20px; text-align: center; }
+
+        .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
         
-        /* Estilos del Modal del Carrito */
+        /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
-        .modal-body { overflow-y: auto; flex: 1; }
-        .modal-footer { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; text-align: right; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
-        .qty-controls { display: flex; align-items: center; gap: 10px; }
-        .qty-btn { background: #eee; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        
-        .loading { color: var(--blue); font-weight: bold; text-align: center; margin: 10px 0; }
+        .modal-content { background: white; width: 95%; max-width: 500px; max-height: 85vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .modal-body { overflow-y: auto; flex: 1; padding: 10px 0; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; }
     </style>
 </head>
 <body>
 
     <div id="login-section" class="login-box">
         <h2 style="text-align:center">DISTRIMAR</h2>
-        <p style="text-align:center; font-size: 14px; color: #666;">Acceso Exclusivo Clientes</p>
-        <div id="status-msg" class="loading hidden">Cargando base de datos...</div>
         <input type="text" id="user-id" placeholder="ID de Cliente">
         <input type="password" id="user-pass" placeholder="Contraseña (Tu ID)">
         <button class="btn btn-blue" id="btn-login" onclick="login()">INGRESAR</button>
@@ -56,29 +55,25 @@
     </div>
 
     <div id="cart-btn" class="cart-float hidden" onclick="openCart()">
-        🛒 Ver Pedido (<span id="cart-count">0</span>) - $<span id="cart-total-float">0</span>
+        🛒 Pedido (<span id="cart-count">0</span>) - $<span id="cart-total-float">0</span>
     </div>
 
-    <!-- Modal del Carrito (Resumen antes de enviar) -->
     <div id="cart-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Detalle de Pedido</h3>
+                <h3>Resumen del Pedido</h3>
                 <button onclick="closeCart()" style="background:none; border:none; font-size:20px; cursor:pointer;">❌</button>
             </div>
-            <div id="cart-items" class="modal-body">
-                <!-- Los items del carrito van a aparecer acá -->
-            </div>
-            <div class="modal-footer">
-                <h3 style="margin: 0 0 10px 0;">Total: $<span id="cart-total-modal">0.00</span></h3>
-                <button class="btn btn-green" onclick="checkout()">✅ CONFIRMAR Y ENVIAR</button>
+            <div id="cart-items" class="modal-body"></div>
+            <div class="modal-footer" style="border-top:1px solid #eee; padding-top:10px;">
+                <h3 style="margin:0 0 10px 0; text-align:right;">Total: $<span id="cart-total-modal">0.00</span></h3>
+                <button class="btn btn-green" onclick="checkout()">✅ ENVIAR PEDIDO</button>
             </div>
         </div>
     </div>
 
     <script>
         let dbStock = [], dbCli = [], currentUser = null;
-        // El carrito ahora guardará objetos: { producto, cantidad }
         let cart = []; 
 
         const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
@@ -103,26 +98,17 @@
         async function login() {
             const idInput = document.getElementById('user-id').value.trim();
             const passInput = document.getElementById('user-pass').value.trim();
-            const status = document.getElementById('status-msg');
-            const btn = document.getElementById('btn-login');
-
             if(!idInput) return alert("Ingresa tu ID");
-
-            status.classList.remove('hidden');
-            btn.disabled = true;
 
             try {
                 const [resS, resC] = await Promise.all([
                     fetch(URL_STK + '&cache=' + Date.now()),
                     fetch(URL_CLI + '&cache=' + Date.now())
                 ]);
-
                 const txtS = await resS.text();
                 const txtC = await resC.text();
-
                 const rawCli = parseCSV(txtC);
                 dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2] || "Clientes" }));
-                
                 currentUser = dbCli.find(c => c.id === idInput);
 
                 if (currentUser && idInput === passInput) {
@@ -130,27 +116,17 @@
                     dbStock = rawStk.map(r => {
                         let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
                         let pLimpio = precio.replace('$','').replace('.','').replace(',','.');
-                        // Asumimos que la imagen está en la 5ta columna (índice 4). Si no hay, pone un placeholder.
-                        let img = r[4] && r[4].trim() !== "" ? r[4] : "https://via.placeholder.com/60x60.png?text=Sin+Foto";
-                        
+                        let img = r[4] && r[4].trim() !== "" ? r[4] : "https://via.placeholder.com/70x70.png?text=Sin+Foto";
                         return { id: r[0], n: r[1], p: parseFloat(pLimpio) || 0, img: img };
                     });
-
                     document.getElementById('login-section').classList.add('hidden');
                     document.getElementById('catalog-section').classList.remove('hidden');
-                    document.getElementById('welcome-msg').innerText = `Bienvenido/a, ${currentUser.nom}`;
+                    document.getElementById('welcome-msg').innerText = `Hola, ${currentUser.nom}`;
                     renderCatalog();
                 } else {
-                    alert("ID o Contraseña incorrectos. Verifica que sean iguales.");
-                    status.classList.add('hidden');
-                    btn.disabled = false;
+                    alert("ID o Contraseña incorrectos.");
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Error de conexión. Asegúrate de tener internet.");
-                status.classList.add('hidden');
-                btn.disabled = false;
-            }
+            } catch (e) { alert("Error de conexión."); }
         }
 
         function renderCatalog() {
@@ -164,163 +140,123 @@
                 const div = document.createElement('div');
                 div.className = "prod-card";
                 div.innerHTML = `
-                    <img src="${p.img}" alt="${p.n}" class="prod-img" onerror="this.src='https://via.placeholder.com/60x60.png?text=Sin+Foto'">
-                    <div class="prod-info">
-                        <small style="color: #888">#${p.id}</small><br>
-                        <b style="font-size: 14px;">${p.n}</b><br>
-                        <span style="color: var(--blue); font-weight: bold">$${p.p.toLocaleString('es-AR', {minimumFractionDigits:2})}</span>
+                    <div class="prod-main">
+                        <img src="${p.img}" class="prod-img" onerror="this.src='https://via.placeholder.com/70x70.png?text=Sin+Foto'">
+                        <div class="prod-info">
+                            <small>#${p.id}</small><br>
+                            <b>${p.n}</b><br>
+                            <span style="color:var(--blue); font-weight:bold">$${p.p.toLocaleString('es-AR')}</span>
+                        </div>
                     </div>
-                    <button class="btn btn-blue" style="width:auto; padding: 8px 12px; margin-top:0;" onclick="addToCart('${p.id}')">+ Añadir</button>
+                    <div class="prod-action-row">
+                        <div class="qty-selector">
+                            <button onclick="changeInCatalog('${p.id}', -1)">-</button>
+                            <span id="qty-${p.id}">1</span>
+                            <button onclick="changeInCatalog('${p.id}', 1)">+</button>
+                        </div>
+                        <button class="btn btn-blue" style="width:auto; margin:0; padding:8px 15px;" onclick="addFromCatalog('${p.id}')">🛒 AGREGAR</button>
+                    </div>
                 `;
                 list.appendChild(div);
             });
         }
 
-        function addToCart(id) {
-            // Buscamos si el producto ya está en el carrito
-            let itemEnCarrito = cart.find(item => item.producto.id === id);
-            
-            if (itemEnCarrito) {
-                itemEnCarrito.cantidad++; // Si ya está, sumamos 1 a la cantidad
-            } else {
-                const p = dbStock.find(x => x.id === id);
-                cart.push({ producto: p, cantidad: 1 }); // Si no está, lo agregamos con cantidad 1
-            }
-            
-            actualizarBotonFlotante();
+        // Maneja el contador visual en el catálogo
+        function changeInCatalog(id, delta) {
+            const el = document.getElementById(`qty-${id}`);
+            let val = parseInt(el.innerText) + delta;
+            if (val < 1) val = 1;
+            el.innerText = val;
         }
 
-        function cambiarCantidad(id, delta) {
+        // Agrega la cantidad seleccionada al carrito
+        function addFromCatalog(id) {
+            const qty = parseInt(document.getElementById(`qty-${id}`).innerText);
+            const p = dbStock.find(x => x.id === id);
+            
             let item = cart.find(i => i.producto.id === id);
             if (item) {
-                item.cantidad += delta;
-                if (item.cantidad <= 0) {
-                    // Si la cantidad llega a 0, lo borramos del carrito
-                    cart = cart.filter(i => i.producto.id !== id);
-                }
-                actualizarBotonFlotante();
-                renderCartModal(); // Re-dibujamos el modal
+                item.cantidad += qty;
+            } else {
+                cart.push({ producto: p, cantidad: qty });
             }
+            
+            // Resetear el contador del catálogo a 1 después de agregar
+            document.getElementById(`qty-${id}`).innerText = 1;
+            
+            actualizarBotonFlotante();
+            alert(`Agregado: ${qty} x ${p.n}`);
         }
 
         function actualizarBotonFlotante() {
             const btn = document.getElementById('cart-btn');
-            
-            // Calculamos total de unidades y plata total
-            let totalUnidades = cart.reduce((suma, item) => suma + item.cantidad, 0);
-            let totalPlata = cart.reduce((suma, item) => suma + (item.producto.p * item.cantidad), 0);
+            let totalUnidades = cart.reduce((s, i) => s + i.cantidad, 0);
+            let totalPlata = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
             
             if (totalUnidades > 0) {
                 btn.classList.remove('hidden');
                 document.getElementById('cart-count').innerText = totalUnidades;
-                document.getElementById('cart-total-float').innerText = totalPlata.toLocaleString('es-AR', {minimumFractionDigits:2});
-                
-                // Animación simple
-                btn.style.transform = "scale(1.05)";
-                setTimeout(() => btn.style.transform = "scale(1)", 200);
+                document.getElementById('cart-total-float').innerText = totalPlata.toLocaleString('es-AR');
             } else {
                 btn.classList.add('hidden');
-                closeCart(); // Cierra el modal si se vacía el carrito
             }
         }
 
         function openCart() {
-            renderCartModal();
-            document.getElementById('cart-modal').classList.remove('hidden');
-        }
-
-        function closeCart() {
-            document.getElementById('cart-modal').classList.add('hidden');
-        }
-
-        function renderCartModal() {
             const list = document.getElementById('cart-items');
             list.innerHTML = "";
-            let totalPlata = 0;
+            let total = 0;
 
             cart.forEach(item => {
-                let subtotal = item.producto.p * item.cantidad;
-                totalPlata += subtotal;
-
+                let sub = item.producto.p * item.cantidad;
+                total += sub;
                 const div = document.createElement('div');
                 div.className = "cart-item";
                 div.innerHTML = `
-                    <div style="flex:1; padding-right:10px;">
-                        <b>${item.producto.n}</b><br>
-                        <small style="color:var(--blue)">$${item.producto.p.toLocaleString('es-AR')} c/u</small>
-                    </div>
-                    <div class="qty-controls">
-                        <button class="qty-btn" onclick="cambiarCantidad('${item.producto.id}', -1)">-</button>
-                        <span>${item.cantidad}</span>
-                        <button class="qty-btn" onclick="cambiarCantidad('${item.producto.id}', 1)">+</button>
-                    </div>
-                    <div style="width: 80px; text-align: right; font-weight: bold;">
-                        $${subtotal.toLocaleString('es-AR', {minimumFractionDigits:2})}
-                    </div>
+                    <div style="flex:1"><b>${item.producto.n}</b><br><small>${item.cantidad} x $${item.producto.p}</small></div>
+                    <div style="font-weight:bold">$${sub.toLocaleString('es-AR')}</div>
+                    <button onclick="removeItem('${item.producto.id}')" style="margin-left:10px; border:none; background:none; color:red;">🗑️</button>
                 `;
                 list.appendChild(div);
             });
-
-            document.getElementById('cart-total-modal').innerText = totalPlata.toLocaleString('es-AR', {minimumFractionDigits:2});
+            document.getElementById('cart-total-modal').innerText = total.toLocaleString('es-AR');
+            document.getElementById('cart-modal').classList.remove('hidden');
         }
 
+        function removeItem(id) {
+            cart = cart.filter(i => i.producto.id !== id);
+            actualizarBotonFlotante();
+            if (cart.length > 0) openCart(); else closeCart();
+        }
+
+        function closeCart() { document.getElementById('cart-modal').classList.add('hidden'); }
+
         async function checkout() {
-            if (cart.length === 0) return;
-            
-            const btnConfirmar = document.querySelector('.modal-footer .btn-green');
-            btnConfirmar.innerText = "⏳ Generando...";
-            btnConfirmar.disabled = true;
-            
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const total = cart.reduce((s, item) => s + (item.producto.p * item.cantidad), 0);
+            const total = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
             
-            doc.setFontSize(18);
-            doc.text("PEDIDO DISTRIMAR", 105, 20, {align: 'center'});
+            doc.text("DISTRIMAR - PEDIDO", 105, 20, {align:'center'});
+            doc.text(`Cliente: ${currentUser.nom}`, 14, 30);
             
-            doc.setFontSize(12);
-            doc.text(`Cliente: ${currentUser.nom} (ID: ${currentUser.id})`, 14, 30);
-            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 37);
-
-            // Mapeamos el nuevo formato del carrito al PDF
             doc.autoTable({
-                startY: 45,
-                head: [['Cant', 'Producto', 'Precio Unit.', 'Subtotal']],
-                body: cart.map(i => [
-                    i.cantidad, 
-                    i.producto.n, 
-                    `$${i.producto.p.toFixed(2)}`,
-                    `$${(i.producto.p * i.cantidad).toFixed(2)}`
-                ]),
-                foot: [['', '', 'TOTAL', `$${total.toFixed(2)}`]],
-                headStyles: { fillColor: [0, 86, 179] }
+                startY: 40,
+                head: [['Cant', 'Producto', 'Subtotal']],
+                body: cart.map(i => [i.cantidad, i.producto.n, `$${(i.producto.p * i.cantidad).toFixed(2)}`]),
+                foot: [['', 'TOTAL', `$${total.toFixed(2)}`]]
             });
 
             const blob = doc.output('blob');
-            const file = new File([blob], `Pedido_${currentUser.nom.replace(/ /g,"_")}.pdf`, { type: 'application/pdf' });
+            const file = new File([blob], `Pedido_${currentUser.nom}.pdf`, { type: 'application/pdf' });
 
-            try {
-                if (navigator.share) {
-                    await navigator.share({
-                        title: 'Pedido DistriMar',
-                        text: `Hola! Soy ${currentUser.nom}, envío mi pedido. Total: $${total.toLocaleString('es-AR')}`,
-                        files: [file]
-                    });
-                } else {
-                    doc.save(`Pedido_${currentUser.nom}.pdf`);
-                    alert("PDF descargado. Por favor envíalo por WhatsApp.");
-                }
-                
-                // Reiniciamos todo después de enviar
-                cart = [];
-                actualizarBotonFlotante();
-                closeCart();
-            } catch (err) {
-                console.error("Error al compartir", err);
-            } finally {
-                btnConfirmar.innerText = "✅ CONFIRMAR Y ENVIAR";
-                btnConfirmar.disabled = false;
+            if (navigator.share) {
+                await navigator.share({ files: [file], text: `Pedido de ${currentUser.nom}` });
+            } else {
+                doc.save(`Pedido_${currentUser.nom}.pdf`);
             }
+            cart = [];
+            actualizarBotonFlotante();
+            closeCart();
         }
     </script>
 </body>
