@@ -23,14 +23,17 @@
         .prod-img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
         .prod-info { flex: 1; }
         
-        /* Controles de cantidad en catálogo */
+        /* Controles de cantidad */
         .prod-action-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; background: #f9f9f9; padding: 8px; border-radius: 8px; }
         .qty-selector { display: flex; align-items: center; gap: 15px; background: white; border: 1px solid #ddd; border-radius: 6px; padding: 2px 10px; }
         .qty-selector button { background: none; border: none; font-size: 20px; font-weight: bold; color: var(--blue); cursor: pointer; padding: 0 5px; }
-        .qty-selector span { font-weight: bold; min-width: 20px; text-align: center; }
+        .qty-selector span { font-weight: bold; min-width: 25px; text-align: center; }
 
-        .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .cart-float { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 10px; }
         
+        /* Notificación Toast (Reemplaza al Alert) */
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+
         /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 95%; max-width: 500px; max-height: 85vh; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
@@ -40,6 +43,8 @@
     </style>
 </head>
 <body>
+
+    <div id="toast">Producto agregado</div>
 
     <div id="login-section" class="login-box">
         <h2 style="text-align:center">DISTRIMAR</h2>
@@ -137,6 +142,8 @@
             const filtered = dbStock.filter(p => p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
             
             filtered.forEach(p => {
+                // Usamos un ID único para el span de cantidad basado en el ID del producto
+                const spanId = `qty-val-${p.id.replace(/\s+/g, '-')}`;
                 const div = document.createElement('div');
                 div.className = "prod-card";
                 div.innerHTML = `
@@ -150,42 +157,51 @@
                     </div>
                     <div class="prod-action-row">
                         <div class="qty-selector">
-                            <button onclick="changeInCatalog('${p.id}', -1)">-</button>
-                            <span id="qty-${p.id}">1</span>
-                            <button onclick="changeInCatalog('${p.id}', 1)">+</button>
+                            <button onclick="changeQty('${spanId}', -1)">-</button>
+                            <span id="${spanId}">1</span>
+                            <button onclick="changeQty('${spanId}', 1)">+</button>
                         </div>
-                        <button class="btn btn-blue" style="width:auto; margin:0; padding:8px 15px;" onclick="addFromCatalog('${p.id}')">🛒 AGREGAR</button>
+                        <button class="btn btn-blue" style="width:auto; margin:0; padding:8px 15px;" 
+                                onclick="addToCart('${p.id}', '${spanId}')">🛒 AGREGAR</button>
                     </div>
                 `;
                 list.appendChild(div);
             });
         }
 
-        // Maneja el contador visual en el catálogo
-        function changeInCatalog(id, delta) {
-            const el = document.getElementById(`qty-${id}`);
+        function changeQty(spanId, delta) {
+            const el = document.getElementById(spanId);
+            if(!el) return;
             let val = parseInt(el.innerText) + delta;
             if (val < 1) val = 1;
             el.innerText = val;
         }
 
-        // Agrega la cantidad seleccionada al carrito
-        function addFromCatalog(id) {
-            const qty = parseInt(document.getElementById(`qty-${id}`).innerText);
-            const p = dbStock.find(x => x.id === id);
+        function addToCart(prodId, spanId) {
+            const qty = parseInt(document.getElementById(spanId).innerText);
+            const product = dbStock.find(p => p.id === prodId);
             
-            let item = cart.find(i => i.producto.id === id);
-            if (item) {
-                item.cantidad += qty;
+            if (!product) return;
+
+            let existing = cart.find(i => i.producto.id === prodId);
+            if (existing) {
+                existing.cantidad += qty;
             } else {
-                cart.push({ producto: p, cantidad: qty });
+                cart.push({ producto: product, cantidad: qty });
             }
             
-            // Resetear el contador del catálogo a 1 después de agregar
-            document.getElementById(`qty-${id}`).innerText = 1;
+            // Resetear a 1 el selector visual
+            document.getElementById(spanId).innerText = "1";
             
+            showToast(`Agregado: ${qty} x ${product.n}`);
             actualizarBotonFlotante();
-            alert(`Agregado: ${qty} x ${p.n}`);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = "1";
+            setTimeout(() => { t.style.opacity = "0"; }, 2000);
         }
 
         function actualizarBotonFlotante() {
@@ -215,7 +231,7 @@
                 div.innerHTML = `
                     <div style="flex:1"><b>${item.producto.n}</b><br><small>${item.cantidad} x $${item.producto.p}</small></div>
                     <div style="font-weight:bold">$${sub.toLocaleString('es-AR')}</div>
-                    <button onclick="removeItem('${item.producto.id}')" style="margin-left:10px; border:none; background:none; color:red;">🗑️</button>
+                    <button onclick="removeItem('${item.producto.id}')" style="margin-left:10px; border:none; background:none; color:red; font-size:18px;">🗑️</button>
                 `;
                 list.appendChild(div);
             });
