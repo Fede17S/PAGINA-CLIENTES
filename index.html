@@ -62,6 +62,7 @@
         .btn:active { transform: scale(0.98); }
         .btn-blue { background-color: var(--grad-start); }
         .btn-green { background-color: #10b981; }
+        .btn-orange { background-color: var(--grad-end); }
 
         .hidden { display: none !important; }
 
@@ -231,7 +232,7 @@
 
         .cart-float:active { transform: scale(0.96); }
 
-        /* --- MODAL CARRITO --- */
+        /* --- MODAL --- */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -354,6 +355,14 @@
             white-space: nowrap;
             pointer-events: none;
         }
+
+        /* --- BOTONES DE ACCIÓN POST-PEDIDO --- */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -367,7 +376,7 @@
         <div id="status-msg" class="hidden" style="color: var(--grad-start); margin-bottom: 10px;">Validando credenciales...</div>
         <input type="text" id="user-id" placeholder="ID de Cliente">
         <input type="password" id="user-pass" placeholder="Contraseña">
-        <button class="btn btn-blue" id="btn-login" onclick="login()" style="background: linear-gradient(to right, var(--grad-start), #3b82f6); margin-top: 10px;">
+        <button class="btn btn-blue" onclick="login()" style="background: linear-gradient(to right, var(--grad-start), #3b82f6); margin-top: 10px;">
             ENTRAR AL CATÁLOGO
         </button>
     </div>
@@ -408,8 +417,32 @@
         </div>
     </div>
 
+    <!-- MODAL POST-PEDIDO (compartir / descargar) -->
+    <div id="share-modal" class="modal-overlay hidden" onclick="handleShareOverlayClick(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ Pedido Generado</h3>
+                <button onclick="closeShareModal()">×</button>
+            </div>
+            <div class="modal-body" style="flex:unset; overflow:unset;">
+                <p style="color:var(--text-second); margin:0 0 20px 0; font-size:15px;">
+                    Tu pedido fue generado correctamente. ¿Qué querés hacer con el PDF?
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-green" onclick="sharePDF()">📤 Compartir PDF</button>
+                    <button class="btn btn-blue" onclick="downloadPDF()">⬇️ Descargar PDF</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeShareModal()" style="background:var(--bg-soft); color:var(--text-second);">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let dbStock = [], dbCli = [], currentUser = null, cart = [];
+        let lastPdfBlob = null, lastPdfFilename = '';
+
         const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
         const URL_CLI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
 
@@ -553,6 +586,10 @@
             if (event.target === document.getElementById('cart-modal')) closeCart();
         }
 
+        function handleShareOverlayClick(event) {
+            if (event.target === document.getElementById('share-modal')) closeShareModal();
+        }
+
         function removeItem(id) {
             cart = cart.filter(i => i.producto.internalId !== id);
             actualizarBotonFlotante();
@@ -564,22 +601,127 @@
             document.getElementById('cart-modal').classList.add('hidden');
         }
 
-        async function checkout() {
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+        }
+
+        function buildPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const total = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
-            doc.text("Pedido DistriMar", 20, 20);
+
+            // Fecha formateada
+            const ahora = new Date();
+            const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const hora  = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+            // Encabezado
+            doc.setFontSize(20);
+            doc.setTextColor(30, 58, 138); // azul
+            doc.text("DISTRIMAR", 20, 22);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139); // gris
+            doc.text("Premium Distribution Service", 20, 29);
+
+            // Línea separadora
+            doc.setDrawColor(226, 232, 240);
+            doc.line(20, 33, 190, 33);
+
+            // Datos del cliente
+            doc.setFontSize(11);
+            doc.setTextColor(30, 41, 59);
+            doc.text(`Cliente: ${currentUser.nom}`, 20, 42);
+            doc.text(`ID: ${currentUser.id}`, 20, 50);
+            doc.text(`Fecha: ${fecha}  |  Hora: ${hora}`, 20, 58);
+
+            // Línea separadora
+            doc.line(20, 63, 190, 63);
+
+            // Tabla de productos
             doc.autoTable({
-                startY: 30,
-                head: [['Cant', 'Producto', 'Subtotal']],
-                body: cart.map(i => [i.cantidad, i.producto.n, `$${(i.producto.p * i.cantidad).toFixed(2)}`]),
+                startY: 68,
+                head: [['Cant.', 'Código', 'Producto', 'P. Unit.', 'Subtotal']],
+                body: cart.map(i => [
+                    i.cantidad,
+                    i.producto.id,
+                    i.producto.n,
+                    `$${i.producto.p.toLocaleString('es-AR')}`,
+                    `$${(i.producto.p * i.cantidad).toLocaleString('es-AR')}`
+                ]),
+                headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                styles: { fontSize: 10 },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 15 },
+                    1: { cellWidth: 25 },
+                    3: { halign: 'right', cellWidth: 28 },
+                    4: { halign: 'right', cellWidth: 30 }
+                }
             });
-            doc.text(`Total: $${total.toFixed(2)}`, 20, doc.lastAutoTable.finalY + 10);
-            doc.save("pedido_distrimar.pdf");
-            alert("Pedido descargado satisfactoriamente.");
+
+            // Total final
+            const finalY = doc.lastAutoTable.finalY + 8;
+            doc.setFontSize(13);
+            doc.setTextColor(30, 58, 138);
+            doc.setFont(undefined, 'bold');
+            doc.text(`TOTAL: $${total.toLocaleString('es-AR')}`, 190, finalY, { align: 'right' });
+
+            // Pie de página
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(150);
+            doc.text("DistriMar — Gracias por su pedido", 105, 285, { align: 'center' });
+
+            return doc;
+        }
+
+        async function checkout() {
+            // Generar PDF y guardarlo en memoria
+            const doc = buildPDF();
+            const pdfBlob = doc.output('blob');
+            lastPdfBlob = pdfBlob;
+            lastPdfFilename = `pedido_${currentUser.id}_${new Date().toISOString().slice(0,10)}.pdf`;
+
+            // Limpiar carrito y cerrar modal
             cart = [];
             actualizarBotonFlotante();
             closeCart();
+
+            // Abrir modal de compartir
+            document.getElementById('share-modal').classList.remove('hidden');
+        }
+
+        async function sharePDF() {
+            if (!lastPdfBlob) return;
+            const file = new File([lastPdfBlob], lastPdfFilename, { type: 'application/pdf' });
+
+            // Usar Web Share API si está disponible (mobile)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Pedido DistriMar',
+                        text: `Pedido de ${currentUser.nom} (ID: ${currentUser.id})`,
+                        files: [file]
+                    });
+                } catch (e) {
+                    if (e.name !== 'AbortError') downloadPDF(); // fallback si falla
+                }
+            } else {
+                // Fallback para desktop: descargar directamente
+                downloadPDF();
+                showToast("Compartir no disponible, se descargó el PDF");
+            }
+        }
+
+        function downloadPDF() {
+            if (!lastPdfBlob) return;
+            const url = URL.createObjectURL(lastPdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = lastPdfFilename;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
