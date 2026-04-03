@@ -60,9 +60,8 @@
         }
 
         .btn:active { transform: scale(0.98); }
-        .btn-blue   { background-color: var(--grad-start); }
-        .btn-green  { background-color: #10b981; }
-        .btn-red    { background-color: #ef4444; }
+        .btn-blue  { background-color: var(--grad-start); }
+        .btn-green { background-color: #10b981; }
 
         .hidden { display: none !important; }
 
@@ -102,7 +101,6 @@
 
         #welcome-msg { margin: 0; font-weight: 300; font-size: 18px; }
 
-        /* Badge ADMIN */
         .admin-badge {
             background: rgba(255,255,255,0.25);
             color: white;
@@ -150,15 +148,12 @@
 
         .prod-card:hover { transform: translateY(-5px); border-color: var(--grad-end); }
 
-        /* Tarjeta sin stock */
         .prod-card.out-of-stock {
             opacity: 0.6;
             border-color: #ef4444 !important;
         }
-
         .prod-card.out-of-stock:hover { transform: none; }
 
-        /* Ribbon "SIN STOCK" */
         .ribbon-sin-stock {
             position: absolute;
             top: 14px;
@@ -198,7 +193,6 @@
             gap: 8px;
         }
 
-        /* --- SELECTOR DE CANTIDAD --- */
         .qty-selector {
             display: flex;
             align-items: center;
@@ -219,7 +213,6 @@
         }
         .qty-selector span { min-width: 20px; text-align: center; font-weight: 600; }
 
-        /* Botón toggle stock (admin) */
         .btn-stock-toggle {
             border: none;
             border-radius: 10px;
@@ -230,20 +223,10 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-
-        .btn-stock-toggle.en-stock {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .btn-stock-toggle.sin-stock {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
+        .btn-stock-toggle.en-stock  { background: #dcfce7; color: #16a34a; }
+        .btn-stock-toggle.sin-stock { background: #fee2e2; color: #dc2626; }
         .btn-stock-toggle:active { transform: scale(0.95); }
 
-        /* Botón agregar deshabilitado */
         .btn-add-disabled {
             width: auto;
             padding: 8px 15px;
@@ -376,9 +359,8 @@
             pointer-events: none;
         }
 
-        /* Banner admin info */
         .admin-info-bar {
-            background: rgba(30, 58, 138, 0.08);
+            background: rgba(30,58,138,0.08);
             border: 1px dashed #93c5fd;
             border-radius: 12px;
             padding: 12px 16px;
@@ -389,6 +371,33 @@
             align-items: center;
             gap: 8px;
         }
+
+        /* Spinner de carga */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -418,7 +427,7 @@
         </div>
         <div class="catalog-container">
             <div id="admin-info-bar" class="admin-info-bar hidden">
-                ℹ️ Modo administrador: usá los botones <b>EN STOCK / SIN STOCK</b> en cada producto para controlar la disponibilidad. Los cambios se guardan automáticamente.
+                ℹ️ Modo administrador: los cambios de stock se guardan en la nube y se reflejan en todos los dispositivos al instante.
             </div>
             <div id="product-list"></div>
         </div>
@@ -472,33 +481,55 @@
     </div>
 
     <script>
-        // ── Constantes ──────────────────────────────────────────────
+        // ── Firebase ──────────────────────────────────────────────────
+        const FIREBASE_URL = "https://ditrimar-panel-pedidos-default-rtdb.firebaseio.com/sinstock.json";
+
+        // ── Credenciales admin ────────────────────────────────────────
         const ADMIN_ID   = "Federico17s";
         const ADMIN_PASS = "221004";
-        const LS_KEY     = "distrimar_sin_stock"; // clave localStorage
 
+        // ── Google Sheets ─────────────────────────────────────────────
         const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
         const URL_CLI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
 
-        // ── Estado global ────────────────────────────────────────────
+        // ── Estado global ─────────────────────────────────────────────
         let dbStock = [], dbCli = [], currentUser = null, cart = [];
         let isAdmin = false;
-        let sinStock = new Set(); // IDs de productos sin stock
+        let sinStock = new Set();
         let lastPdfBlob = null, lastPdfFilename = '';
 
-        // ── Persistencia de sin-stock en localStorage ─────────────────
-        function cargarSinStock() {
+        // ── Firebase: cargar sin-stock ────────────────────────────────
+        async function cargarSinStock() {
             try {
-                const raw = localStorage.getItem(LS_KEY);
-                sinStock = raw ? new Set(JSON.parse(raw)) : new Set();
-            } catch { sinStock = new Set(); }
+                const res  = await fetch(FIREBASE_URL);
+                const data = await res.json();
+                // data es un objeto { "id_producto": true/false } o null
+                sinStock = data
+                    ? new Set(Object.keys(data).filter(k => data[k] === true))
+                    : new Set();
+            } catch {
+                sinStock = new Set();
+            }
         }
 
-        function guardarSinStock() {
-            localStorage.setItem(LS_KEY, JSON.stringify([...sinStock]));
+        // ── Firebase: guardar sin-stock ───────────────────────────────
+        async function guardarSinStock() {
+            const payload = {};
+            dbStock.forEach(p => {
+                payload[p.id] = sinStock.has(p.id);
+            });
+            try {
+                await fetch(FIREBASE_URL, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            } catch {
+                showToast("⚠️ Error al guardar en la nube");
+            }
         }
 
-        // ── Parseo CSV ────────────────────────────────────────────────
+        // ── CSV parser ────────────────────────────────────────────────
         function parseCSV(text) {
             const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
             const sep = lines[0].includes(';') ? ';' : ',';
@@ -515,26 +546,50 @@
             });
         }
 
+        // ── Spinner ───────────────────────────────────────────────────
+        function showSpinner(msg) {
+            let el = document.getElementById('loading-overlay');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'loading-overlay';
+                el.className = 'loading-overlay';
+                document.body.appendChild(el);
+            }
+            el.innerHTML = `<div class="spinner"></div><span>${msg}</span>`;
+            el.style.display = 'flex';
+        }
+
+        function hideSpinner() {
+            const el = document.getElementById('loading-overlay');
+            if (el) el.style.display = 'none';
+        }
+
         // ── Login ─────────────────────────────────────────────────────
         async function login() {
             const idInput   = document.getElementById('user-id').value.trim();
             const passInput = document.getElementById('user-pass').value.trim();
             if (!idInput) return alert("Ingresa tu ID");
+
             document.getElementById('status-msg').classList.remove('hidden');
+            showSpinner("Cargando catálogo...");
 
             try {
-                // ¿Es el admin?
+                // ¿Admin?
                 if (idInput === ADMIN_ID && passInput === ADMIN_PASS) {
                     isAdmin = true;
                     currentUser = { id: ADMIN_ID, nom: "Federico (Admin)", lista: "" };
-                    const resS  = await fetch(URL_STK);
+
+                    const resS   = await fetch(URL_STK);
                     const rawStk = parseCSV(await resS.text());
                     dbStock = rawStk.map((r, index) => ({
-                        internalId: index, id: r[0], n: r[1],
-                        p: parseFloat((r[2] || "0").replace('$','').replace('.','').replace(',','.')) || 0,
+                        internalId: index,
+                        id:  r[0],
+                        n:   r[1],
+                        p:   parseFloat((r[2] || "0").replace('$','').replace('.','').replace(',','.')) || 0,
                         img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar"
                     }));
-                    cargarSinStock();
+
+                    await cargarSinStock();
                     mostrarCatalogo();
                     return;
                 }
@@ -550,16 +605,26 @@
                     dbStock = rawStk.map((r, index) => {
                         let precio  = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
                         let pLimpio = (precio || "0").replace('$','').replace('.','').replace(',','.');
-                        return { internalId: index, id: r[0], n: r[1], p: parseFloat(pLimpio) || 0,
-                                 img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar" };
+                        return {
+                            internalId: index, id: r[0], n: r[1],
+                            p:   parseFloat(pLimpio) || 0,
+                            img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar"
+                        };
                     });
-                    cargarSinStock();
+
+                    // Cargar estado de stock desde Firebase
+                    await cargarSinStock();
                     mostrarCatalogo();
                 } else {
                     alert("Datos incorrectos");
                 }
-            } catch (e) { alert("Error de red"); }
-            finally { document.getElementById('status-msg').classList.add('hidden'); }
+
+            } catch (e) {
+                alert("Error de red. Verificá tu conexión.");
+            } finally {
+                hideSpinner();
+                document.getElementById('status-msg').classList.add('hidden');
+            }
         }
 
         function mostrarCatalogo() {
@@ -589,16 +654,12 @@
                 const div = document.createElement('div');
                 div.className = `prod-card${noStock ? ' out-of-stock' : ''}`;
 
-                // Ribbon sin stock
                 const ribbonHTML = noStock
-                    ? `<div class="ribbon-sin-stock">SIN STOCK</div>`
-                    : '';
+                    ? `<div class="ribbon-sin-stock">SIN STOCK</div>` : '';
 
-                // Zona de acción según rol
                 let actionHTML = '';
 
                 if (isAdmin) {
-                    // Admin: botón toggle + selector qty oculto
                     const toggleClass = noStock ? 'sin-stock' : 'en-stock';
                     const toggleLabel = noStock ? '❌ SIN STOCK' : '✅ EN STOCK';
                     actionHTML = `
@@ -607,7 +668,6 @@
                         </button>
                     `;
                 } else if (noStock) {
-                    // Cliente, sin stock: botón deshabilitado
                     actionHTML = `
                         <div class="qty-selector" style="opacity:0.4; pointer-events:none;">
                             <button>−</button><span id="${spanId}">1</span><button>+</button>
@@ -615,7 +675,6 @@
                         <button class="btn-add-disabled">NO DISPONIBLE</button>
                     `;
                 } else {
-                    // Cliente, con stock: normal
                     actionHTML = `
                         <div class="qty-selector">
                             <button onclick="changeQty('${spanId}', -1)">−</button>
@@ -642,29 +701,29 @@
         }
 
         // ── Toggle stock (admin) ──────────────────────────────────────
-        function toggleStock(productId) {
+        async function toggleStock(productId) {
             if (sinStock.has(productId)) {
                 sinStock.delete(productId);
-                showToast("✅ Producto marcado EN STOCK");
+                showToast("✅ Producto EN STOCK — guardando...");
             } else {
                 sinStock.add(productId);
-                showToast("❌ Producto marcado SIN STOCK");
+                showToast("❌ Producto SIN STOCK — guardando...");
             }
-            guardarSinStock();
-            renderCatalog();
+            renderCatalog();          // actualizar UI inmediatamente
+            await guardarSinStock();  // guardar en Firebase
         }
 
-        // ── Helpers generales ─────────────────────────────────────────
+        // ── Carrito ───────────────────────────────────────────────────
         function changeQty(spanId, delta) {
-            const el  = document.getElementById(spanId);
-            let val   = parseInt(el.innerText) + delta;
+            const el = document.getElementById(spanId);
+            let val  = parseInt(el.innerText) + delta;
             if (val < 1) val = 1;
             el.innerText = val;
         }
 
         function addToCart(internalId) {
             const product = dbStock.find(p => p.internalId === internalId);
-            if (sinStock.has(product.id)) return; // doble seguridad
+            if (sinStock.has(product.id)) return;
             const qty = parseInt(document.getElementById(`qty-val-${internalId}`).innerText);
             let existing = cart.find(i => i.producto.internalId === internalId);
             if (existing) existing.cantidad += qty;
@@ -677,7 +736,7 @@
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.style.opacity = "1";
-            setTimeout(() => { t.style.opacity = "0"; }, 2000);
+            setTimeout(() => { t.style.opacity = "0"; }, 2500);
         }
 
         function actualizarBotonFlotante() {
@@ -693,7 +752,6 @@
             }
         }
 
-        // ── Carrito ───────────────────────────────────────────────────
         function openCart() {
             const list = document.getElementById('cart-items');
             list.innerHTML = "";
@@ -741,8 +799,8 @@
             const total = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
 
             const ahora = new Date();
-            const fecha = ahora.toLocaleDateString('es-AR',  { day:'2-digit', month:'2-digit', year:'numeric' });
-            const hora  = ahora.toLocaleTimeString('es-AR',  { hour:'2-digit', minute:'2-digit' });
+            const fecha = ahora.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+            const hora  = ahora.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
 
             doc.setFontSize(20);
             doc.setTextColor(30, 58, 138);
