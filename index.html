@@ -60,9 +60,9 @@
         }
 
         .btn:active { transform: scale(0.98); }
-        .btn-blue { background-color: var(--grad-start); }
-        .btn-green { background-color: #10b981; }
-        .btn-orange { background-color: var(--grad-end); }
+        .btn-blue   { background-color: var(--grad-start); }
+        .btn-green  { background-color: #10b981; }
+        .btn-red    { background-color: #ef4444; }
 
         .hidden { display: none !important; }
 
@@ -77,25 +77,11 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
             text-align: center;
         }
+        .login-box h2 { color: var(--grad-start); margin: 0 0 5px 0; font-size: 32px; letter-spacing: -1px; }
+        .login-box p  { color: var(--text-second); margin-bottom: 30px; font-size: 14px; }
 
-        .login-box h2 {
-            color: var(--grad-start);
-            margin: 0 0 5px 0;
-            font-size: 32px;
-            letter-spacing: -1px;
-        }
-
-        .login-box p {
-            color: var(--text-second);
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        /* --- CATÁLOGO --- */
-        #catalog-section {
-            background-color: var(--bg-soft);
-            min-height: 100vh;
-        }
+        /* --- HEADER --- */
+        #catalog-section { background-color: var(--bg-soft); min-height: 100vh; }
 
         .header-store {
             background: linear-gradient(90deg, var(--grad-start), var(--grad-end));
@@ -107,10 +93,24 @@
             color: white;
         }
 
-        #welcome-msg {
-            margin: 0 0 15px 0;
-            font-weight: 300;
-            font-size: 18px;
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        #welcome-msg { margin: 0; font-weight: 300; font-size: 18px; }
+
+        /* Badge ADMIN */
+        .admin-badge {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
         }
 
         input#search {
@@ -121,7 +121,6 @@
             border-radius: 12px;
             backdrop-filter: blur(5px);
         }
-
         input#search::placeholder { color: rgba(255,255,255,0.8); }
 
         .catalog-container {
@@ -146,19 +145,36 @@
             flex-direction: column;
             border: 1px solid transparent;
             transition: all 0.3s ease;
+            position: relative;
         }
 
-        .prod-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--grad-end);
+        .prod-card:hover { transform: translateY(-5px); border-color: var(--grad-end); }
+
+        /* Tarjeta sin stock */
+        .prod-card.out-of-stock {
+            opacity: 0.6;
+            border-color: #ef4444 !important;
         }
 
-        .prod-img-container {
-            height: 180px;
-            padding: 15px;
-            background: #fdfdfd;
+        .prod-card.out-of-stock:hover { transform: none; }
+
+        /* Ribbon "SIN STOCK" */
+        .ribbon-sin-stock {
+            position: absolute;
+            top: 14px;
+            right: -28px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 36px;
+            transform: rotate(35deg);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
+        .prod-img-container { height: 180px; padding: 15px; background: #fdfdfd; }
         .prod-img { width: 100%; height: 100%; object-fit: contain; }
         .prod-info { padding: 15px; flex: 1; }
 
@@ -171,11 +187,7 @@
             overflow: hidden;
         }
 
-        .prod-price {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--grad-start);
-        }
+        .prod-price { font-size: 20px; font-weight: 700; color: var(--grad-start); }
 
         .prod-action-row {
             padding: 15px;
@@ -183,6 +195,7 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid var(--bg-soft);
+            gap: 8px;
         }
 
         /* --- SELECTOR DE CANTIDAD --- */
@@ -194,7 +207,6 @@
             border-radius: 10px;
             padding: 4px 10px;
         }
-
         .qty-selector button {
             background: none;
             border: none;
@@ -205,10 +217,42 @@
             padding: 0 4px;
             color: var(--grad-end);
         }
+        .qty-selector span { min-width: 20px; text-align: center; font-weight: 600; }
 
-        .qty-selector span {
-            min-width: 20px;
-            text-align: center;
+        /* Botón toggle stock (admin) */
+        .btn-stock-toggle {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-stock-toggle.en-stock {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .btn-stock-toggle.sin-stock {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-stock-toggle:active { transform: scale(0.95); }
+
+        /* Botón agregar deshabilitado */
+        .btn-add-disabled {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 12px;
+            background: #cbd5e1;
+            color: #94a3b8;
+            border: none;
+            border-radius: 12px;
+            cursor: not-allowed;
             font-weight: 600;
         }
 
@@ -229,10 +273,9 @@
             z-index: 1000;
             transition: transform 0.2s;
         }
-
         .cart-float:active { transform: scale(0.96); }
 
-        /* --- MODAL --- */
+        /* --- MODALES --- */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -246,10 +289,7 @@
         }
 
         @media (min-width: 600px) {
-            .modal-overlay {
-                align-items: center;
-                padding: 20px;
-            }
+            .modal-overlay { align-items: center; padding: 20px; }
         }
 
         .modal-content {
@@ -267,21 +307,11 @@
         }
 
         @media (min-width: 600px) {
-            .modal-content {
-                border-radius: 24px;
-                animation: fadeIn 0.2s ease;
-            }
+            .modal-content { border-radius: 24px; animation: fadeIn 0.2s ease; }
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to   { transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.96); }
-            to   { opacity: 1; transform: scale(1); }
-        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
         .modal-header {
             display: flex;
@@ -289,13 +319,7 @@
             align-items: center;
             margin-bottom: 20px;
         }
-
-        .modal-header h3 {
-            margin: 0;
-            font-size: 22px;
-            color: var(--text-main);
-        }
-
+        .modal-header h3 { margin: 0; font-size: 22px; color: var(--text-main); }
         .modal-header button {
             background: var(--bg-soft);
             border: none;
@@ -319,13 +343,8 @@
             margin-bottom: 20px;
             padding-right: 4px;
         }
+        .modal-footer { border-top: 1px solid var(--border-light); padding-top: 20px; }
 
-        .modal-footer {
-            border-top: 1px solid var(--border-light);
-            padding-top: 20px;
-        }
-
-        /* --- ITEMS DEL CARRITO --- */
         .cart-item {
             display: flex;
             align-items: center;
@@ -334,9 +353,10 @@
             background: var(--bg-soft);
             border-radius: 14px;
         }
-
-        .cart-item b { font-size: 14px; color: var(--text-main); }
+        .cart-item b     { font-size: 14px; color: var(--text-main); }
         .cart-item small { color: var(--text-second); font-size: 12px; }
+
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 
         /* --- TOAST --- */
         #toast {
@@ -356,18 +376,24 @@
             pointer-events: none;
         }
 
-        /* --- BOTONES DE ACCIÓN POST-PEDIDO --- */
-        .action-buttons {
+        /* Banner admin info */
+        .admin-info-bar {
+            background: rgba(30, 58, 138, 0.08);
+            border: 1px dashed #93c5fd;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--grad-start);
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
 <body>
 
-    <div id="toast">Producto agregado</div>
+    <div id="toast"></div>
 
     <!-- LOGIN -->
     <div id="login-section" class="login-box">
@@ -384,10 +410,16 @@
     <!-- CATÁLOGO -->
     <div id="catalog-section" class="hidden">
         <div class="header-store">
-            <h3 id="welcome-msg">Bienvenido</h3>
+            <div class="header-top">
+                <h3 id="welcome-msg">Bienvenido</h3>
+                <span id="admin-badge" class="admin-badge hidden">⚙️ ADMIN</span>
+            </div>
             <input type="text" id="search" placeholder="Buscar productos por nombre o código..." oninput="renderCatalog()">
         </div>
         <div class="catalog-container">
+            <div id="admin-info-bar" class="admin-info-bar hidden">
+                ℹ️ Modo administrador: usá los botones <b>EN STOCK / SIN STOCK</b> en cada producto para controlar la disponibilidad. Los cambios se guardan automáticamente.
+            </div>
             <div id="product-list"></div>
         </div>
     </div>
@@ -417,7 +449,7 @@
         </div>
     </div>
 
-    <!-- MODAL POST-PEDIDO (compartir / descargar) -->
+    <!-- MODAL POST-PEDIDO -->
     <div id="share-modal" class="modal-overlay hidden" onclick="handleShareOverlayClick(event)">
         <div class="modal-content">
             <div class="modal-header">
@@ -430,7 +462,7 @@
                 </p>
                 <div class="action-buttons">
                     <button class="btn btn-green" onclick="sharePDF()">📤 Compartir PDF</button>
-                    <button class="btn btn-blue" onclick="downloadPDF()">⬇️ Descargar PDF</button>
+                    <button class="btn btn-blue"  onclick="downloadPDF()">⬇️ Descargar PDF</button>
                 </div>
             </div>
             <div class="modal-footer">
@@ -440,14 +472,35 @@
     </div>
 
     <script>
-        let dbStock = [], dbCli = [], currentUser = null, cart = [];
-        let lastPdfBlob = null, lastPdfFilename = '';
+        // ── Constantes ──────────────────────────────────────────────
+        const ADMIN_ID   = "Federico17s";
+        const ADMIN_PASS = "221004";
+        const LS_KEY     = "distrimar_sin_stock"; // clave localStorage
 
         const URL_STK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
         const URL_CLI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
 
+        // ── Estado global ────────────────────────────────────────────
+        let dbStock = [], dbCli = [], currentUser = null, cart = [];
+        let isAdmin = false;
+        let sinStock = new Set(); // IDs de productos sin stock
+        let lastPdfBlob = null, lastPdfFilename = '';
+
+        // ── Persistencia de sin-stock en localStorage ─────────────────
+        function cargarSinStock() {
+            try {
+                const raw = localStorage.getItem(LS_KEY);
+                sinStock = raw ? new Set(JSON.parse(raw)) : new Set();
+            } catch { sinStock = new Set(); }
+        }
+
+        function guardarSinStock() {
+            localStorage.setItem(LS_KEY, JSON.stringify([...sinStock]));
+        }
+
+        // ── Parseo CSV ────────────────────────────────────────────────
         function parseCSV(text) {
-            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
             const sep = lines[0].includes(';') ? ';' : ',';
             return lines.slice(1).map(line => {
                 const values = [];
@@ -462,12 +515,31 @@
             });
         }
 
+        // ── Login ─────────────────────────────────────────────────────
         async function login() {
-            const idInput = document.getElementById('user-id').value.trim();
+            const idInput   = document.getElementById('user-id').value.trim();
             const passInput = document.getElementById('user-pass').value.trim();
             if (!idInput) return alert("Ingresa tu ID");
             document.getElementById('status-msg').classList.remove('hidden');
+
             try {
+                // ¿Es el admin?
+                if (idInput === ADMIN_ID && passInput === ADMIN_PASS) {
+                    isAdmin = true;
+                    currentUser = { id: ADMIN_ID, nom: "Federico (Admin)", lista: "" };
+                    const resS  = await fetch(URL_STK);
+                    const rawStk = parseCSV(await resS.text());
+                    dbStock = rawStk.map((r, index) => ({
+                        internalId: index, id: r[0], n: r[1],
+                        p: parseFloat((r[2] || "0").replace('$','').replace('.','').replace(',','.')) || 0,
+                        img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar"
+                    }));
+                    cargarSinStock();
+                    mostrarCatalogo();
+                    return;
+                }
+
+                // Cliente normal
                 const [resS, resC] = await Promise.all([fetch(URL_STK), fetch(URL_CLI)]);
                 const rawCli = parseCSV(await resC.text());
                 dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2] || "Clientes" }));
@@ -476,61 +548,123 @@
                 if (currentUser && idInput === passInput) {
                     const rawStk = parseCSV(await resS.text());
                     dbStock = rawStk.map((r, index) => {
-                        let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
-                        let pLimpio = precio.replace('$','').replace('.','').replace(',','.');
-                        return {
-                            internalId: index, id: r[0], n: r[1],
-                            p: parseFloat(pLimpio) || 0,
-                            img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar"
-                        };
+                        let precio  = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
+                        let pLimpio = (precio || "0").replace('$','').replace('.','').replace(',','.');
+                        return { internalId: index, id: r[0], n: r[1], p: parseFloat(pLimpio) || 0,
+                                 img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMar" };
                     });
-                    document.getElementById('login-section').classList.add('hidden');
-                    document.getElementById('catalog-section').classList.remove('hidden');
-                    document.getElementById('welcome-msg').innerText = `Bienvenido, ${currentUser.nom}`;
-                    renderCatalog();
-                } else { alert("Datos incorrectos"); }
+                    cargarSinStock();
+                    mostrarCatalogo();
+                } else {
+                    alert("Datos incorrectos");
+                }
             } catch (e) { alert("Error de red"); }
             finally { document.getElementById('status-msg').classList.add('hidden'); }
         }
 
+        function mostrarCatalogo() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('catalog-section').classList.remove('hidden');
+            document.getElementById('welcome-msg').innerText = `Bienvenido, ${currentUser.nom}`;
+            if (isAdmin) {
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('admin-info-bar').classList.remove('hidden');
+            }
+            renderCatalog();
+        }
+
+        // ── Render catálogo ───────────────────────────────────────────
         function renderCatalog() {
             const query = document.getElementById('search').value.toLowerCase();
-            const list = document.getElementById('product-list');
+            const list  = document.getElementById('product-list');
             list.innerHTML = "";
-            const filtered = dbStock.filter(p => p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
+
+            const filtered = dbStock.filter(p =>
+                p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query)
+            );
+
             filtered.forEach(p => {
-                const spanId = `qty-val-${p.internalId}`;
+                const spanId  = `qty-val-${p.internalId}`;
+                const noStock = sinStock.has(p.id);
                 const div = document.createElement('div');
-                div.className = "prod-card";
+                div.className = `prod-card${noStock ? ' out-of-stock' : ''}`;
+
+                // Ribbon sin stock
+                const ribbonHTML = noStock
+                    ? `<div class="ribbon-sin-stock">SIN STOCK</div>`
+                    : '';
+
+                // Zona de acción según rol
+                let actionHTML = '';
+
+                if (isAdmin) {
+                    // Admin: botón toggle + selector qty oculto
+                    const toggleClass = noStock ? 'sin-stock' : 'en-stock';
+                    const toggleLabel = noStock ? '❌ SIN STOCK' : '✅ EN STOCK';
+                    actionHTML = `
+                        <button class="btn-stock-toggle ${toggleClass}" onclick="toggleStock('${p.id}')">
+                            ${toggleLabel}
+                        </button>
+                    `;
+                } else if (noStock) {
+                    // Cliente, sin stock: botón deshabilitado
+                    actionHTML = `
+                        <div class="qty-selector" style="opacity:0.4; pointer-events:none;">
+                            <button>−</button><span id="${spanId}">1</span><button>+</button>
+                        </div>
+                        <button class="btn-add-disabled">NO DISPONIBLE</button>
+                    `;
+                } else {
+                    // Cliente, con stock: normal
+                    actionHTML = `
+                        <div class="qty-selector">
+                            <button onclick="changeQty('${spanId}', -1)">−</button>
+                            <span id="${spanId}">1</span>
+                            <button onclick="changeQty('${spanId}', 1)">+</button>
+                        </div>
+                        <button class="btn btn-blue" style="width:auto; padding:8px 15px; font-size:12px;"
+                                onclick="addToCart(${p.internalId})">AÑADIR</button>
+                    `;
+                }
+
                 div.innerHTML = `
+                    ${ribbonHTML}
                     <div class="prod-img-container"><img src="${p.img}" class="prod-img"></div>
                     <div class="prod-info">
                         <small style="color:var(--text-second)">#${p.id}</small>
                         <div class="prod-name">${p.n}</div>
                         <div class="prod-price">$${p.p.toLocaleString('es-AR')}</div>
                     </div>
-                    <div class="prod-action-row">
-                        <div class="qty-selector">
-                            <button onclick="changeQty('${spanId}', -1)">−</button>
-                            <span id="${spanId}">1</span>
-                            <button onclick="changeQty('${spanId}', 1)">+</button>
-                        </div>
-                        <button class="btn btn-blue" style="width:auto; padding:8px 15px; font-size:12px;" onclick="addToCart(${p.internalId})">AÑADIR</button>
-                    </div>
+                    <div class="prod-action-row">${actionHTML}</div>
                 `;
                 list.appendChild(div);
             });
         }
 
+        // ── Toggle stock (admin) ──────────────────────────────────────
+        function toggleStock(productId) {
+            if (sinStock.has(productId)) {
+                sinStock.delete(productId);
+                showToast("✅ Producto marcado EN STOCK");
+            } else {
+                sinStock.add(productId);
+                showToast("❌ Producto marcado SIN STOCK");
+            }
+            guardarSinStock();
+            renderCatalog();
+        }
+
+        // ── Helpers generales ─────────────────────────────────────────
         function changeQty(spanId, delta) {
-            const el = document.getElementById(spanId);
-            let val = parseInt(el.innerText) + delta;
+            const el  = document.getElementById(spanId);
+            let val   = parseInt(el.innerText) + delta;
             if (val < 1) val = 1;
             el.innerText = val;
         }
 
         function addToCart(internalId) {
             const product = dbStock.find(p => p.internalId === internalId);
+            if (sinStock.has(product.id)) return; // doble seguridad
             const qty = parseInt(document.getElementById(`qty-val-${internalId}`).innerText);
             let existing = cart.find(i => i.producto.internalId === internalId);
             if (existing) existing.cantidad += qty;
@@ -548,17 +682,18 @@
 
         function actualizarBotonFlotante() {
             const btn = document.getElementById('cart-btn');
-            let totalUnidades = cart.reduce((s, i) => s + i.cantidad, 0);
-            let totalPlata = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
-            if (totalUnidades > 0) {
+            let totalU = cart.reduce((s, i) => s + i.cantidad, 0);
+            let totalP = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
+            if (totalU > 0 && !isAdmin) {
                 btn.classList.remove('hidden');
-                document.getElementById('cart-count').innerText = totalUnidades;
-                document.getElementById('cart-total-float').innerText = totalPlata.toLocaleString('es-AR');
+                document.getElementById('cart-count').innerText = totalU;
+                document.getElementById('cart-total-float').innerText = totalP.toLocaleString('es-AR');
             } else {
                 btn.classList.add('hidden');
             }
         }
 
+        // ── Carrito ───────────────────────────────────────────────────
         function openCart() {
             const list = document.getElementById('cart-items');
             list.innerHTML = "";
@@ -574,7 +709,8 @@
                         <small>${item.cantidad} x $${item.producto.p.toLocaleString('es-AR')}</small>
                     </div>
                     <div style="font-weight:bold; white-space:nowrap;">$${sub.toLocaleString('es-AR')}</div>
-                    <button onclick="removeItem(${item.producto.internalId})" style="border:none; background:none; cursor:pointer; font-size:18px; margin-left:6px;">🗑️</button>
+                    <button onclick="removeItem(${item.producto.internalId})"
+                            style="border:none; background:none; cursor:pointer; font-size:18px; margin-left:6px;">🗑️</button>
                 `;
                 list.appendChild(div);
             });
@@ -582,63 +718,50 @@
             document.getElementById('cart-modal').classList.remove('hidden');
         }
 
-        function handleOverlayClick(event) {
-            if (event.target === document.getElementById('cart-modal')) closeCart();
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('cart-modal')) closeCart();
         }
-
-        function handleShareOverlayClick(event) {
-            if (event.target === document.getElementById('share-modal')) closeShareModal();
+        function handleShareOverlayClick(e) {
+            if (e.target === document.getElementById('share-modal')) closeShareModal();
         }
 
         function removeItem(id) {
             cart = cart.filter(i => i.producto.internalId !== id);
             actualizarBotonFlotante();
-            if (cart.length > 0) openCart();
-            else closeCart();
+            if (cart.length > 0) openCart(); else closeCart();
         }
 
-        function closeCart() {
-            document.getElementById('cart-modal').classList.add('hidden');
-        }
+        function closeCart()       { document.getElementById('cart-modal').classList.add('hidden'); }
+        function closeShareModal() { document.getElementById('share-modal').classList.add('hidden'); }
 
-        function closeShareModal() {
-            document.getElementById('share-modal').classList.add('hidden');
-        }
-
+        // ── PDF ───────────────────────────────────────────────────────
         function buildPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc   = new jsPDF();
             const total = cart.reduce((s, i) => s + (i.producto.p * i.cantidad), 0);
 
-            // Fecha formateada
             const ahora = new Date();
-            const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const hora  = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const fecha = ahora.toLocaleDateString('es-AR',  { day:'2-digit', month:'2-digit', year:'numeric' });
+            const hora  = ahora.toLocaleTimeString('es-AR',  { hour:'2-digit', minute:'2-digit' });
 
-            // Encabezado
             doc.setFontSize(20);
-            doc.setTextColor(30, 58, 138); // azul
+            doc.setTextColor(30, 58, 138);
             doc.text("DISTRIMAR", 20, 22);
 
             doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139); // gris
+            doc.setTextColor(100, 116, 139);
             doc.text("Premium Distribution Service", 20, 29);
 
-            // Línea separadora
             doc.setDrawColor(226, 232, 240);
             doc.line(20, 33, 190, 33);
 
-            // Datos del cliente
             doc.setFontSize(11);
             doc.setTextColor(30, 41, 59);
             doc.text(`Cliente: ${currentUser.nom}`, 20, 42);
-            doc.text(`ID: ${currentUser.id}`, 20, 50);
+            doc.text(`ID: ${currentUser.id}`,       20, 50);
             doc.text(`Fecha: ${fecha}  |  Hora: ${hora}`, 20, 58);
-
-            // Línea separadora
             doc.line(20, 63, 190, 63);
 
-            // Tabla de productos
             doc.autoTable({
                 startY: 68,
                 head: [['Cant.', 'Código', 'Producto', 'P. Unit.', 'Subtotal']],
@@ -660,14 +783,12 @@
                 }
             });
 
-            // Total final
             const finalY = doc.lastAutoTable.finalY + 8;
             doc.setFontSize(13);
             doc.setTextColor(30, 58, 138);
             doc.setFont(undefined, 'bold');
             doc.text(`TOTAL: $${total.toLocaleString('es-AR')}`, 190, finalY, { align: 'right' });
 
-            // Pie de página
             doc.setFontSize(9);
             doc.setFont(undefined, 'normal');
             doc.setTextColor(150);
@@ -677,26 +798,18 @@
         }
 
         async function checkout() {
-            // Generar PDF y guardarlo en memoria
             const doc = buildPDF();
-            const pdfBlob = doc.output('blob');
-            lastPdfBlob = pdfBlob;
+            lastPdfBlob     = doc.output('blob');
             lastPdfFilename = `pedido_${currentUser.id}_${new Date().toISOString().slice(0,10)}.pdf`;
-
-            // Limpiar carrito y cerrar modal
             cart = [];
             actualizarBotonFlotante();
             closeCart();
-
-            // Abrir modal de compartir
             document.getElementById('share-modal').classList.remove('hidden');
         }
 
         async function sharePDF() {
             if (!lastPdfBlob) return;
             const file = new File([lastPdfBlob], lastPdfFilename, { type: 'application/pdf' });
-
-            // Usar Web Share API si está disponible (mobile)
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
@@ -704,11 +817,8 @@
                         text: `Pedido de ${currentUser.nom} (ID: ${currentUser.id})`,
                         files: [file]
                     });
-                } catch (e) {
-                    if (e.name !== 'AbortError') downloadPDF(); // fallback si falla
-                }
+                } catch (e) { if (e.name !== 'AbortError') downloadPDF(); }
             } else {
-                // Fallback para desktop: descargar directamente
                 downloadPDF();
                 showToast("Compartir no disponible, se descargó el PDF");
             }
@@ -717,8 +827,8 @@
         function downloadPDF() {
             if (!lastPdfBlob) return;
             const url = URL.createObjectURL(lastPdfBlob);
-            const a = document.createElement('a');
-            a.href = url;
+            const a   = document.createElement('a');
+            a.href     = url;
             a.download = lastPdfFilename;
             a.click();
             URL.revokeObjectURL(url);
