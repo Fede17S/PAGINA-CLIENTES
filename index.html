@@ -665,6 +665,16 @@
         }
         .btn-download:hover { background: rgba(201,147,58,0.16); }
 
+        .btn-whatsapp {
+            width: 100%; padding: 14px;
+            background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.25);
+            border-radius: 12px; color: #25d366;
+            font-family: 'DM Sans', sans-serif; font-size: 12px;
+            font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+        }
+        .btn-whatsapp:hover { background: rgba(37,211,102,0.18); }
+
         .btn-close-modal {
             width: 100%; padding: 14px; background: transparent;
             border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
@@ -825,6 +835,7 @@
                 Tu pedido fue generado correctamente.<br>¿Qué querés hacer con el PDF?
             </p>
             <button class="btn-share"    onclick="sharePDF()">📤 &nbsp;Compartir PDF</button>
+            <button class="btn-whatsapp" onclick="abrirWhatsApp()">💬 &nbsp;Enviar por WhatsApp</button>
             <button class="btn-download" onclick="downloadPDF()">⬇ &nbsp;Descargar PDF</button>
         </div>
         <div class="modal-footer">
@@ -1366,6 +1377,20 @@ function downloadPDF() {
     const a   = document.createElement('a');
     a.href = url; a.download = lastPdfFilename; a.click();
     URL.revokeObjectURL(url);
+}
+
+function abrirWhatsApp() {
+    // Primero descarga el PDF automáticamente
+    downloadPDF();
+    // Arma el mensaje con los datos del cliente
+    const total = cart.reduce ? 0 : 0; // ya fue vaciado, el total lo ponemos en el mensaje
+    const texto = encodeURIComponent(
+        `Hola Federico! Te mando el pedido de *${currentUser.nom}* (ID: ${currentUser.id}). Adjunto el PDF 📎`
+    );
+    const numero = "5492804691951"; // +54 9 280 469-1951 sin + ni espacios
+    // En mobile abre la app, en desktop abre web.whatsapp.com
+    const url = `https://wa.me/${numero}?text=${texto}`;
+    window.open(url, '_blank');
 }
 </script>
 </body>
