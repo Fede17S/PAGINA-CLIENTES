@@ -845,17 +845,19 @@
 
 <script>
 // ── Firebase ──────────────────────────────────────────────────────
-const FB_BASE    = "https://ditrimar-panel-pedidos-default-rtdb.firebaseio.com";
-const FB_STOCK   = FB_BASE + "/sinstock.json";
-const FB_CATS    = FB_BASE + "/categorias.json";
-const FB_OFERTAS = FB_BASE + "/ofertas.json";
-const FB_LISTA_CATS = FB_BASE + "/lista_categorias.json";
-
 // ── Credenciales ──────────────────────────────────────────────────
 const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
-const URL_STK    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQGGGUL7sB1gqhvZLKJtqtYgIZbyfbK9EmUKPnPpwFNX-uEYrRN2VWGgpOF3WDxheXKvkIr0VW8oVF/pub?output=csv";
-const URL_CLI    = "https://docs.google.com/spreadsheets/d/e/2PACX-1vStWgQatDMyC-hkTph-idGBLXnjBBymRd26tz-kCY-hJaRZGzFtObAh5C0mCO25yzXZjubZ-xt3oq6s/pub?output=csv";
+const FB_DM      = "https://distrimar-5e1a3-default-rtdb.firebaseio.com";
+const EMP_COD    = "1122"; // Código DistriMax
+
+// Firebase paths — same DB as rutaapp_admin
+let FB_EMP_KEY   = "";   // se llena en login
+const FB_DM_EMPS = FB_DM + "/empresas";
+function FB_STOCK()      { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/sinstock.json"; }
+function FB_CATS()       { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/catalogoCats.json"; }
+function FB_OFERTAS()    { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/ofertas.json"; }
+function FB_LISTA_CATS() { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/lista_categorias.json"; }
 
 // ── Estado ────────────────────────────────────────────────────────
 let dbStock = [], dbCli = [], currentUser = null, cart = [];
@@ -886,7 +888,7 @@ async function fbPut(url, data) {
 
 async function cargarTodo() {
     const [ss, cats, ofs, lc] = await Promise.all([
-        fbGet(FB_STOCK), fbGet(FB_CATS), fbGet(FB_OFERTAS), fbGet(FB_LISTA_CATS)
+        fbGet(FB_STOCK()), fbGet(FB_CATS()), fbGet(FB_OFERTAS()), fbGet(FB_LISTA_CATS())
     ]);
     sinStock   = ss   ? new Set(Object.keys(ss).filter(k => ss[k]))    : new Set();
     categorias = cats || {};
@@ -897,12 +899,12 @@ async function cargarTodo() {
 async function guardarSinStock() {
     const payload = {};
     dbStock.forEach(p => { payload[p.id] = sinStock.has(p.id); });
-    await fbPut(FB_STOCK, payload);
+    await fbPut(FB_STOCK(), payload);
 }
 
-async function guardarCategorias() { await fbPut(FB_CATS, categorias); }
-async function guardarOfertas()    { await fbPut(FB_OFERTAS, ofertas); }
-async function guardarListaCats()  { await fbPut(FB_LISTA_CATS, listaCats); }
+async function guardarCategorias() { await fbPut(FB_CATS(), categorias); }
+async function guardarOfertas()    { await fbPut(FB_OFERTAS(), ofertas); }
+async function guardarListaCats()  { await fbPut(FB_LISTA_CATS(), listaCats); }
 
 // ── CSV ───────────────────────────────────────────────────────────
 function parseCSV(text) {
@@ -925,6 +927,27 @@ function showSpinner() { document.getElementById('loading-overlay').style.displa
 function hideSpinner() { document.getElementById('loading-overlay').style.display = 'none'; }
 
 // ── Login ─────────────────────────────────────────────────────────
+async function buscarEmpKey(cod) {
+    const empresas = await fbGet(FB_DM_EMPS+".json");
+    if (!empresas) return null;
+    return Object.keys(empresas).find(k => empresas[k].codigo === cod) || null;
+}
+
+function prodDesdeFirebase(productos, lista) {
+    return Object.entries(productos || {}).map(([fbk, p], i) => {
+        const esPatagonia = (lista||"").toLowerCase().includes("patagonia");
+        const precio = esPatagonia ? (p.precioPatagonia||0) : (p.precioClientes||0);
+        return {
+            internalId: i, fbKey: fbk,
+            id: p.codigo||fbk.slice(-4),
+            n: p.nombre||"",
+            p: precio,
+            img: p.foto||"",
+            categoria: p.categoria||""
+        };
+    }).filter(p => p.n && p.p > 0);
+}
+
 async function login() {
     const idInput   = document.getElementById('user-id').value.trim();
     const passInput = document.getElementById('user-pass').value.trim();
@@ -932,35 +955,49 @@ async function login() {
     document.getElementById('status-msg').classList.remove('hidden');
     showSpinner();
     try {
+        // Find empresa key
+        const empKey = await buscarEmpKey(EMP_COD);
+        if (!empKey) { showToast("Error de configuración"); return; }
+        FB_EMP_KEY = empKey;
+
+        // Admin login
         if (idInput === ADMIN_ID && passInput === ADMIN_PASS) {
             isAdmin = true;
-            currentUser = { id: ADMIN_ID, nom: "Federico", lista: "" };
-            const resS = await fetch(URL_STK);
-            const rawStk = parseCSV(await resS.text());
-            dbStock = rawStk.map((r, i) => ({
-                internalId: i, id: r[0], n: r[1],
-                p: parseFloat((r[2]||"0").replace('$','').replace('.','').replace(',','.')) || 0,
-                img: r[4] || "https://via.placeholder.com/200x200.png?text=DistriMax"
-            }));
+            currentUser = { id: ADMIN_ID, nom: "Federico", lista: "Clientes" };
+            const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
+            dbStock = prodDesdeFirebase(emp.productos, "Clientes");
             await cargarTodo();
             mostrarCatalogo();
             return;
         }
-        const [resS, resC] = await Promise.all([fetch(URL_STK), fetch(URL_CLI)]);
-        const rawCli = parseCSV(await resC.text());
-        dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2] || "Clientes" }));
-        currentUser = dbCli.find(c => c.id === idInput);
-        if (currentUser && idInput === passInput) {
-            const rawStk = parseCSV(await resS.text());
-            dbStock = rawStk.map((r, i) => {
-                let precio = currentUser.lista.toLowerCase().includes("patagonia") ? r[3] : r[2];
-                let pLimpio = (precio||"0").replace('$','').replace('.','').replace(',','.');
-                return { internalId: i, id: r[0], n: r[1], p: parseFloat(pLimpio)||0,
-                         img: r[4]||"https://via.placeholder.com/200x200.png?text=DistriMax" };
-            });
+
+        // Client login — validate against clientesCSV or usuarios
+        const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
+        const csvC = emp.clientesCSV||"";
+        if (csvC) {
+            const rawCli = parseCSV(csvC);
+            dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2]||"Clientes" }));
+        }
+        // Also check usuarios node
+        const usuarios = emp.usuarios||{};
+        let userFromUsu = null;
+        Object.values(usuarios).forEach(u => {
+            if ((u.id===idInput||u.name===idInput) && u.pass===passInput) userFromUsu=u;
+        });
+
+        currentUser = dbCli.find(c => c.id===idInput);
+        const passOk = currentUser ? idInput===passInput : false;
+
+        if ((currentUser && passOk) || userFromUsu) {
+            if (userFromUsu && !currentUser) {
+                currentUser = { id: userFromUsu.id||idInput, nom: userFromUsu.name||idInput, lista: "Clientes" };
+            }
+            dbStock = prodDesdeFirebase(emp.productos, currentUser.lista);
             await cargarTodo();
             mostrarCatalogo();
-        } else { showToast("Datos incorrectos"); }
+        } else {
+            showToast("ID o contraseña incorrectos");
+        }
     } catch(e) { showToast("Error de red — verificá tu conexión"); console.error(e); }
     finally { hideSpinner(); document.getElementById('status-msg').classList.add('hidden'); }
 }
@@ -987,7 +1024,7 @@ function buildSidebar() {
     // Contar productos por cat
     const counts = { todos: dbStock.length, ofertas: 0 };
     dbStock.forEach(p => {
-        const cat = categorias[p.id];
+        const cat = categorias[p.id] || p.categoria;
         if (cat) counts[cat] = (counts[cat] || 0) + 1;
         if (ofertas[p.id]?.activa) counts.ofertas++;
     });
@@ -1098,7 +1135,7 @@ function renderProducts(list) {
         const noStock  = sinStock.has(p.id);
         const ofData   = ofertas[p.id];
         const enOferta = ofData?.activa && ofData?.precio > 0;
-        const cat      = categorias[p.id] || '';
+        const cat      = categorias[p.id] || p.categoria || '';
 
         const div = document.createElement('div');
         div.className = `prod-card${noStock ? ' out-of-stock' : ''}${enOferta ? ' oferta-card' : ''}`;
@@ -1180,7 +1217,7 @@ function renderProducts(list) {
             ${ribbons}
             <div class="prod-img-container">
                 <img src="${p.img}" class="prod-img"
-                     onerror="this.src='https://via.placeholder.com/200x200.png?text=DistriMax'">
+                     onerror="this.src='https://placehold.co/200x200/111f30/c9933a?text=DistriMax'">
                 ${ofertaBadge}
             </div>
             <div class="prod-info">
