@@ -971,27 +971,40 @@ async function login() {
             return;
         }
 
-        // Client login — validate against clientesCSV or usuarios
+        // Client login — validate against usuarios node (primary) + clientesCSV (fallback)
         const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
-        const csvC = emp.clientesCSV||"";
-        if (csvC) {
-            const rawCli = parseCSV(csvC);
-            dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2]||"Clientes" }));
-        }
-        // Also check usuarios node
+
+        // Check usuarios node first
         const usuarios = emp.usuarios||{};
         let userFromUsu = null;
         Object.values(usuarios).forEach(u => {
-            if ((u.id===idInput||u.name===idInput) && u.pass===passInput) userFromUsu=u;
+            if ((u.id===idInput || u.id===idInput) && u.pass===passInput) {
+                // Only allow catalog access if catalogo=true or role=cliente
+                if(u.catalogo!==false) userFromUsu = u;
+            }
         });
 
-        currentUser = dbCli.find(c => c.id===idInput);
-        const passOk = currentUser ? idInput===passInput : false;
+        // Fallback: clientesCSV (id = password)
+        let userFromCSV = null;
+        const csvC = emp.clientesCSV||"";
+        if (!userFromUsu && csvC) {
+            const rawCli = parseCSV(csvC);
+            dbCli = rawCli.map(r => ({ id: r[0], nom: r[1], lista: r[2]||"Clientes" }));
+            const found = dbCli.find(c => c.id===idInput && idInput===passInput);
+            if (found) userFromCSV = found;
+        }
 
-        if ((currentUser && passOk) || userFromUsu) {
-            if (userFromUsu && !currentUser) {
-                currentUser = { id: userFromUsu.id||idInput, nom: userFromUsu.name||idInput, lista: "Clientes" };
-            }
+        if (userFromUsu) {
+            currentUser = {
+                id: userFromUsu.id||idInput,
+                nom: userFromUsu.name||idInput,
+                lista: userFromUsu.lista||"Clientes"
+            };
+            dbStock = prodDesdeFirebase(emp.productos, currentUser.lista);
+            await cargarTodo();
+            mostrarCatalogo();
+        } else if (userFromCSV) {
+            currentUser = userFromCSV;
             dbStock = prodDesdeFirebase(emp.productos, currentUser.lista);
             await cargarTodo();
             mostrarCatalogo();
