@@ -1055,7 +1055,9 @@ function buildSidebar() {
     const items = [
         { id: 'todos',   label: 'Todos', icon: '📦', count: counts.todos },
         { id: 'ofertas', label: 'Ofertas', icon: '🏷️', count: counts.ofertas, isOferta: true },
-        ...todas.map(c => ({ id: c, label: c, icon: getCatIcon(c), count: counts[c] || 0 }))
+        ...todas
+            .filter(c => (counts[c] || 0) > 0)
+            .map(c => ({ id: c, label: c, icon: getCatIcon(c), count: counts[c] }))
     ];
 
     items.forEach(item => {
