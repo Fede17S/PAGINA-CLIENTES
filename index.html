@@ -7,7 +7,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- OFFLINE BANNER -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:999;background:#dc2626;color:#fff;padding:10px 16px;text-align:center;font-size:13px;font-weight:700;align-items:center;justify-content:center;gap:8px">
+  📶 Sin conexión — mostrando catálogo guardado
+</div>
+
+<!-- HISTORIAL PANEL -->
+<div id="hist-panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div style="font-size:18px;font-weight:800;color:var(--cream)">📋 Mis últimos pedidos</div>
+    <button onclick="cerrarHistorial()" style="background:none;border:1px solid var(--border);color:var(--cream);border-radius:8px;padding:8px 14px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Cerrar</button>
+  </div>
+  <div id="hist-list"></div>
+</div>
+
+<!-- HISTORIAL BUTTON -->
+<div class="hist-btn" id="hist-btn" onclick="abrirHistorial()" title="Mis pedidos">📋</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
@@ -720,7 +737,24 @@
             font-size: 12px; color: var(--gold2);
             display: flex; align-items: center; gap: 8px;
         }
-    </style>
+    
+/* ── LAZY / LOAD MORE ── */
+.lazy-img { transition: opacity .3s; }
+.lazy-img[data-src] { opacity: 0.3; }
+.lazy-img:not([data-src]) { opacity: 1; }
+
+/* ── HISTORIAL ── */
+#hist-panel { position:fixed;inset:0;background:rgba(11,22,35,.95);z-index:600;display:none;flex-direction:column;overflow-y:auto;padding:24px 20px }
+#hist-panel.open { display:flex }
+.hist-item { background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px }
+.hist-date { font-size:11px;color:var(--muted);margin-bottom:8px }
+.hist-products { font-size:13px;color:var(--cream);line-height:1.7 }
+.hist-total { font-size:16px;font-weight:700;color:var(--gold);margin-top:8px }
+
+/* ── HIST BUTTON ── */
+.hist-btn { position:fixed;bottom:90px;right:18px;background:var(--navy2);border:1px solid var(--border);border-radius:50%;width:48px;height:48px;display:none;align-items:center;justify-content:center;font-size:20px;cursor:pointer;z-index:299;box-shadow:0 4px 16px rgba(0,0,0,.4) }
+.hist-btn.visible { display:flex }
+</style>
 </head>
 <body>
 
@@ -933,6 +967,26 @@ async function buscarEmpKey(cod) {
     return Object.keys(empresas).find(k => empresas[k].codigo === cod) || null;
 }
 
+const CACHE_TTL = 30 * 60 * 1000; // 30 min
+
+function getCacheKey(empKey, lista) { return "dm_cat_"+empKey+"_"+lista; }
+
+function saveCache(empKey, lista, data) {
+    try {
+        localStorage.setItem(getCacheKey(empKey,lista), JSON.stringify({ ts: Date.now(), data }));
+    } catch(e) {}
+}
+
+function loadCache(empKey, lista) {
+    try {
+        const raw = localStorage.getItem(getCacheKey(empKey,lista));
+        if (!raw) return null;
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(getCacheKey(empKey,lista)); return null; }
+        return data;
+    } catch(e) { return null; }
+}
+
 function prodDesdeFirebase(productos, lista) {
     return Object.entries(productos || {}).map(([fbk, p], i) => {
         const esPatagonia = (lista||"").toLowerCase().includes("patagonia");
@@ -965,9 +1019,13 @@ async function login() {
             isAdmin = true;
             currentUser = { id: ADMIN_ID, nom: "Federico", lista: "Clientes" };
             const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
-            dbStock = prodDesdeFirebase(emp.productos, "Clientes");
+            // Try cache first for admin too
+            const cachedAdmin = loadCache(empKey, "Clientes");
+            dbStock = cachedAdmin || prodDesdeFirebase(emp.productos, "Clientes");
+            if (!cachedAdmin) saveCache(empKey, "Clientes", dbStock);
             await cargarTodo();
             mostrarCatalogo();
+            mostrarBotonesExtra();
             return;
         }
 
@@ -1000,7 +1058,9 @@ async function login() {
                 nom: userFromUsu.name||idInput,
                 lista: userFromUsu.lista||"Clientes"
             };
-            dbStock = prodDesdeFirebase(emp.productos, currentUser.lista);
+            const cached = loadCache(empKey, currentUser.lista||"Clientes");
+            dbStock = cached || prodDesdeFirebase(emp.productos, currentUser.lista);
+            if (!cached) saveCache(empKey, currentUser.lista||"Clientes", dbStock);
             await cargarTodo();
             mostrarCatalogo();
         } else if (userFromCSV) {
@@ -1124,8 +1184,14 @@ async function promptNewCategory() {
 // ── Filters & Render ──────────────────────────────────────────────
 function applyFilters() {
     const query = document.getElementById('search').value.toLowerCase();
-    let filtered = dbStock.filter(p =>
-        p.n.toLowerCase().includes(query) || p.id.toLowerCase().includes(query)
+    function normalize(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""); }
+    const q = normalize(query);
+    let filtered = !q ? [...dbStock] : dbStock.filter(p =>
+        normalize(p.n).includes(q) ||
+        normalize(p.id).includes(q) ||
+        normalize(p.categoria||"").includes(q) ||
+        // Word match: every word in query appears somewhere in name
+        q.split(" ").filter(Boolean).every(w => normalize(p.n).includes(w))
     );
 
     if (catActiva === 'ofertas') {
@@ -1148,20 +1214,31 @@ function applyFilters() {
     renderProducts(filtered);
 }
 
+let _allProducts = [];
+let _pageSize = 24;
+let _currentPage = 0;
+
 function renderProducts(list) {
+    _allProducts = list;
+    _currentPage = 0;
     const container = document.getElementById('product-list');
     container.innerHTML = '';
-
     if (list.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">🔍</div>
-                <p>No hay productos en esta categoría</p>
-            </div>`;
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><p>No hay productos en esta categoría</p></div>`;
         return;
     }
+    renderPage();
+}
 
-    list.forEach(p => {
+function renderPage() {
+    const container = document.getElementById('product-list');
+    const start = _currentPage * _pageSize;
+    const chunk = _allProducts.slice(start, start + _pageSize);
+    // Remove old load-more btn
+    const oldBtn = document.getElementById('load-more-btn');
+    if (oldBtn) oldBtn.remove();
+
+    chunk.forEach(p => {
         const spanId   = `qty-val-${p.internalId}`;
         const noStock  = sinStock.has(p.id);
         const ofData   = ofertas[p.id];
@@ -1247,7 +1324,7 @@ function renderProducts(list) {
         div.innerHTML = `
             ${ribbons}
             <div class="prod-img-container">
-                <img src="${p.img}" class="prod-img"
+                <img data-src="${p.img||''}" src="https://placehold.co/200x200/111f30/c9933a?text=..." class="prod-img lazy-img" loading="lazy"
                      onerror="this.src='https://placehold.co/200x200/111f30/c9933a?text=DistriMax'">
                 ${ofertaBadge}
             </div>
@@ -1260,6 +1337,48 @@ function renderProducts(list) {
         `;
         container.appendChild(div);
     });
+
+    // Lazy load images in this batch
+    activarLazyImages();
+
+    // Load more button
+    const total = _allProducts.length;
+    const shown = (_currentPage + 1) * _pageSize;
+    if (shown < total) {
+        const btn = document.createElement('div');
+        btn.id = 'load-more-btn';
+        btn.style.cssText = 'grid-column:1/-1;text-align:center;padding:20px';
+        btn.innerHTML = `<button onclick="cargarMas()" style="padding:12px 32px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Ver más (${total-shown} restantes)</button>`;
+        container.appendChild(btn);
+    }
+}
+
+function cargarMas() {
+    _currentPage++;
+    renderPage();
+}
+
+function activarLazyImages() {
+    if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    const img = e.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                    obs.unobserve(img);
+                }
+            });
+        }, { rootMargin: '200px' });
+        document.querySelectorAll('.lazy-img[data-src]').forEach(img => obs.observe(img));
+    } else {
+        // Fallback: load all immediately
+        document.querySelectorAll('.lazy-img[data-src]').forEach(img => {
+            img.src = img.dataset.src; img.removeAttribute('data-src');
+        });
+    }
 }
 
 // ── Admin actions ─────────────────────────────────────────────────
@@ -1459,6 +1578,12 @@ function downloadPDF() {
 async function compartirWhatsApp() {
     if (!lastPdfBlob) return;
     const file  = new File([lastPdfBlob], lastPdfFilename, { type: 'application/pdf' });
+    // Save to order history
+    try {
+        const hist = JSON.parse(localStorage.getItem("dm_hist_"+currentUser.id)||"[]");
+        hist.unshift({ fecha: new Date().toISOString(), items: cart.map(i=>({n:i.nombre,c:i.cantidad,p:i.precio})), total: cart.reduce((s,i)=>s+i.precio*i.cantidad,0) });
+        localStorage.setItem("dm_hist_"+currentUser.id, JSON.stringify(hist.slice(0,10)));
+    } catch(e) {}
     const texto = `Hola Federico! Te mando el pedido de *${currentUser.nom}* (ID: ${currentUser.id}) 📎`;
     const numero = "5492804691951";
 
@@ -1485,6 +1610,51 @@ async function compartirWhatsApp() {
 }
 
 function abrirWhatsApp() { compartirWhatsApp(); }
+
+function abrirHistorial() {
+    const hist = JSON.parse(localStorage.getItem("dm_hist_"+(currentUser&&currentUser.id||""))||"[]");
+    const list = document.getElementById("hist-list");
+    if (!hist.length) {
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📭</div>Todavía no hiciste ningún pedido</div>';
+    } else {
+        list.innerHTML = hist.map(function(h,i) {
+            var fecha = new Date(h.fecha).toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+            var productos = h.items.map(function(it){return it.c+"x "+it.n;}).join(", ");
+            var total = h.items.reduce(function(s,it){return s+it.c*it.p;},0);
+            return "<div class='hist-item'>"+
+                "<div class='hist-date'>#"+(hist.length-i)+" · "+fecha+"</div>"+
+                "<div class='hist-products'>"+productos+"</div>"+
+                "<div class='hist-total'>Total: $"+total.toLocaleString("es-AR",{minimumFractionDigits:2})+"</div>"+
+            "</div>";
+        }).join("");
+    }
+    document.getElementById("hist-panel").classList.add("open");
+}
+
+function cerrarHistorial() {
+    document.getElementById("hist-panel").classList.remove("open");
+}
+
+function mostrarBotonesExtra() {
+    var btn = document.getElementById("hist-btn");
+    if (btn) btn.classList.add("visible");
+}
+
+window.addEventListener("online",  function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="none"; refreshCatalogBackground(); });
+window.addEventListener("offline", function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="flex"; });
+
+async function refreshCatalogBackground() {
+    if (!FB_EMP_KEY || !currentUser) return;
+    try {
+        var emp = await fbGet(FB_DM_EMPS+"/"+FB_EMP_KEY+".json");
+        if (!emp || !emp.productos) return;
+        var fresh = prodDesdeFirebase(emp.productos, currentUser.lista||"Clientes");
+        saveCache(FB_EMP_KEY, currentUser.lista||"Clientes", fresh);
+        dbStock = fresh;
+        applyFilters();
+    } catch(e) {}
+}
+
 </script>
 </body>
 </html>
