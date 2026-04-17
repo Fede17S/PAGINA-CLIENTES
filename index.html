@@ -1031,11 +1031,13 @@ function mostrarCatalogo() {
 // ── Sidebar & Tabs ────────────────────────────────────────────────
 function buildSidebar() {
     // Obtener categorías usadas
+    // Only use categories that actually have products
     const usadas = new Set([
         ...Object.values(categorias).filter(Boolean),
         ...dbStock.map(p => p.categoria).filter(Boolean)
     ]);
-    const todas = [...new Set([...listaCats, ...usadas])].sort((a,b) => a.localeCompare(b,'es'));
+    // Only keep categories with count > 0
+    const todas = [...usadas].sort((a,b) => a.localeCompare(b,'es'));
 
     // Contar productos por cat
     const counts = { todos: dbStock.length, ofertas: 0 };
