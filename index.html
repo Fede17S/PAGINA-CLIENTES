@@ -1031,13 +1031,16 @@ function mostrarCatalogo() {
 // ── Sidebar & Tabs ────────────────────────────────────────────────
 function buildSidebar() {
     // Obtener categorías usadas
-    const usadas = new Set(Object.values(categorias).filter(Boolean));
-    const todas = [...new Set([...listaCats, ...usadas])];
+    const usadas = new Set([
+        ...Object.values(categorias).filter(Boolean),
+        ...dbStock.map(p => p.categoria).filter(Boolean)
+    ]);
+    const todas = [...new Set([...listaCats, ...usadas])].sort((a,b) => a.localeCompare(b,'es'));
 
     // Contar productos por cat
     const counts = { todos: dbStock.length, ofertas: 0 };
     dbStock.forEach(p => {
-        const cat = categorias[p.id] || p.categoria;
+        const cat = categorias[p.id] || p.categoria || '';
         if (cat) counts[cat] = (counts[cat] || 0) + 1;
         if (ofertas[p.id]?.activa) counts.ofertas++;
     });
@@ -1124,8 +1127,19 @@ function applyFilters() {
     if (catActiva === 'ofertas') {
         filtered = filtered.filter(p => ofertas[p.id]?.activa);
     } else if (catActiva !== 'todos') {
-        filtered = filtered.filter(p => categorias[p.id] === catActiva);
+        filtered = filtered.filter(p => (categorias[p.id] || p.categoria || '') === catActiva);
     }
+
+    // Sort: always A-Z by name
+    filtered.sort((a,b) => {
+        if (catActiva === 'todos') {
+            // By category first, then name
+            const ca = (categorias[a.id]||a.categoria||'zzz').toLowerCase();
+            const cb = (categorias[b.id]||b.categoria||'zzz').toLowerCase();
+            if (ca !== cb) return ca.localeCompare(cb, 'es');
+        }
+        return a.n.localeCompare(b.n, 'es');
+    });
 
     renderProducts(filtered);
 }
@@ -1256,9 +1270,19 @@ async function toggleStock(prodId) {
 async function setCat(prodId, cat) {
     if (cat) categorias[prodId] = cat;
     else delete categorias[prodId];
+    // Also update p.categoria in dbStock so filter works immediately
+    const prod = dbStock.find(p => p.id === prodId);
+    if (prod) prod.categoria = cat || '';
     buildSidebar();
+    applyFilters();
     showToast(cat ? `Categoría: ${cat}` : "Sin categoría");
     await guardarCategorias();
+    // Also save to Firebase empresa productos if fbKey exists
+    if (prod && prod.fbKey && FB_EMP_KEY) {
+        try {
+            await fbPut(FB_DM_EMPS+"/"+FB_EMP_KEY+"/productos/"+prod.fbKey+"/categoria.json", JSON.stringify(cat||""));
+        } catch(e) { console.warn("No se pudo guardar categoría en producto:", e); }
+    }
 }
 
 async function toggleOferta(prodId, activa) {
