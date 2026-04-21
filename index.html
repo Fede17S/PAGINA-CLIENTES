@@ -789,6 +789,10 @@
             <div class="spinner-ring" style="width:16px;height:16px;border-width:2px;"></div>
             Validando...
         </div>
+        <div class="field-group" id="emp-field-wrap">
+            <label>Empresa</label>
+            <input type="text" id="emp-cod-input" placeholder="Código de empresa" autocomplete="off" autocapitalize="none" spellcheck="false" style="text-transform:lowercase">
+        </div>
         <div class="field-group">
             <label>ID de Cliente</label>
             <input type="text" id="user-id" placeholder="Ingresá tu ID" autocomplete="off">
@@ -909,7 +913,15 @@ const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
 const FB_DM      = "https://distrimar-5e1a3-default-rtdb.firebaseio.com";
 // Read empresa code from URL param ?emp=CODE, fallback to 1122
-const EMP_COD = (new URLSearchParams(location.search).get("emp") || "1122").toLowerCase().trim();
+// EMP_COD is determined at login time (see getEmpCod())
+const EMP_URL = (new URLSearchParams(location.search).get("emp") || "").toLowerCase().trim();
+function getEmpCod() {
+    // URL param takes priority (pre-filled link from admin)
+    if (EMP_URL) return EMP_URL;
+    // Otherwise read from the input field
+    const inp = document.getElementById("emp-cod-input");
+    return inp ? inp.value.trim().toLowerCase() : "";
+}
 
 // Firebase paths — same DB as rutaapp_admin
 let FB_EMP_KEY   = "";   // se llena en login
@@ -991,7 +1003,10 @@ function hideSpinner() { document.getElementById('loading-overlay').style.displa
 async function buscarEmpKey(cod) {
     const empresas = await fbGet(FB_DM_EMPS+".json");
     if (!empresas) return null;
-    return Object.keys(empresas).find(k => empresas[k].codigo === cod) || null;
+    // Compare as strings — codigo may be stored as number or string in Firebase
+    return Object.keys(empresas).find(k =>
+        String(empresas[k].codigo||"").toLowerCase().trim() === String(cod||"").toLowerCase().trim()
+    ) || null;
 }
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
@@ -1037,8 +1052,10 @@ async function login() {
     showSpinner();
     try {
         // Find empresa key
-        const empKey = await buscarEmpKey(EMP_COD);
-        if (!empKey) { showToast("Error de configuración"); return; }
+        const empCod = getEmpCod();
+        if (!empCod) { showToast("Ingresá el código de empresa"); return; }
+        const empKey = await buscarEmpKey(empCod);
+        if (!empKey) { showToast("Empresa '" + empCod + "' no encontrada"); return; }
         FB_EMP_KEY = empKey;
 
         // Admin login
@@ -1737,6 +1754,20 @@ async function refreshCatalogBackground() {
     } catch(e) {}
 }
 
+// Auto-fill empresa from URL and hide field if provided
+document.addEventListener("DOMContentLoaded", function() {
+    if (EMP_URL) {
+        var wrap = document.getElementById("emp-field-wrap");
+        var inp  = document.getElementById("emp-cod-input");
+        if (inp)  inp.value = EMP_URL;
+        if (wrap) wrap.style.display = "none";
+    }
+    // Focus first visible field
+    var firstField = EMP_URL
+        ? document.getElementById("user-id")
+        : document.getElementById("emp-cod-input");
+    if (firstField) setTimeout(function(){ firstField.focus(); }, 200);
+});
 </script>
 </body>
 </html>
