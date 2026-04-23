@@ -763,6 +763,23 @@
 .susp-sub{font-size:14px;color:var(--muted);max-width:380px;line-height:1.7;margin-bottom:28px}
 .susp-wa{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;padding:13px 26px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;margin-top:8px}
 .plan-badge-top{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;z-index:500;pointer-events:none}
+
+/* ── CAJA / UNIDAD PRICING ── */
+.prod-price-caja { font-size:14px; font-weight:700; color:var(--gold,#c9933a); display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.08) }
+.prod-price-caja span { font-size:15px; font-weight:800 }
+.prod-price-unidad { font-size:13px; font-weight:600; color:#7dd3fc; display:flex; justify-content:space-between; align-items:center; padding:4px 0 }
+.prod-price-unidad span { font-size:14px; font-weight:700 }
+.prod-unit-price { font-size:11px; color:#94a3b8; margin-top:3px }
+
+/* ── DUAL ACTION ── */
+.prod-action-dual { padding:10px 12px; display:flex; flex-direction:column; gap:6px }
+.dual-row { display:flex; gap:6px; align-items:center }
+.qty-sm button { width:26px!important; height:26px!important; font-size:14px!important }
+.qty-sm span { min-width:22px!important; font-size:13px!important }
+.btn-caja { flex:1; padding:7px 8px; background:rgba(201,147,58,.15); color:#f4c060; border:1.5px solid rgba(201,147,58,.4); border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; font-family:inherit }
+.btn-caja:hover { background:rgba(201,147,58,.25); box-shadow:0 2px 8px rgba(201,147,58,.3) }
+.btn-uni  { flex:1; padding:7px 8px; background:rgba(125,211,252,.1); color:#7dd3fc; border:1.5px solid rgba(125,211,252,.3); border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; font-family:inherit }
+.btn-uni:hover { background:rgba(125,211,252,.2) }
 </style>
 </head>
 <body>
@@ -872,41 +889,7 @@
 <div id="cart-modal" class="modal-overlay hidden" onclick="handleOverlayClick(event)">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Tu Pedido</h3>
-            <button class="modal-close" onclick="closeCart()">×</button>
-        </div>
-        <div id="cart-items" class="modal-body"></div>
-        <div class="modal-footer">
-            <div class="cart-total-row">
-                <span class="cart-total-label-text">Total estimado</span>
-                <span class="cart-total-amount">$<span id="cart-total-modal">0</span></span>
-            </div>
-            <button class="btn-confirm" onclick="checkout()">Confirmar pedido →</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL POST-PEDIDO -->
-<div id="share-modal" class="modal-overlay hidden" onclick="handleShareOverlayClick(event)">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Pedido listo ✓</h3>
-            <button class="modal-close" onclick="closeShareModal()">×</button>
-        </div>
-        <div class="modal-body" style="flex:unset; overflow:unset;">
-            <p style="color:var(--muted); font-size:14px; line-height:1.7; margin-bottom:24px;">
-                Tu pedido fue generado correctamente.<br>¿Qué querés hacer con el PDF?
-            </p>
-            <button class="btn-whatsapp" onclick="compartirWhatsApp()">💬 &nbsp;Enviar por WhatsApp</button>
-            <button class="btn-download" onclick="downloadPDF()">⬇ &nbsp;Descargar PDF</button>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-close-modal" onclick="closeShareModal()">Cerrar</button>
-        </div>
-    </div>
-</div>
-
-<script>
+           
 // ── Firebase ──────────────────────────────────────────────────────
 // ── Credenciales ──────────────────────────────────────────────────
 const ADMIN_ID   = "Federico17s";
@@ -1038,6 +1021,9 @@ function prodDesdeFirebase(productos, lista) {
             id: p.codigo||fbk.slice(-4),
             n: p.nombre||"",
             p: precio,
+            pCli: p.precioClientes||0,
+            uCaja: p.unidadesPorCaja||0,
+            pUni: p.precioUnitario||0,
             img: p.foto||"",
             categoria: p.categoria||""
         };
@@ -1299,15 +1285,26 @@ function renderPage() {
         if (noStock)  ribbons += `<div class="ribbon ribbon-stock">Sin Stock</div>`;
 
         // Price display
+        const precioCaja = p.pCli || p.p || 0;
+        const precioUni  = p.pUni || 0;
+        const uCaja      = p.uCaja || 0;
         let priceHTML = '';
         if (enOferta) {
             priceHTML = `
                 <div class="prod-price-wrap">
                     <div class="prod-price oferta-price">$${ofData.precio.toLocaleString('es-AR')}</div>
-                    <div class="prod-price-original">$${p.p.toLocaleString('es-AR')}</div>
+                    <div class="prod-price-original">$${precioCaja.toLocaleString('es-AR')}</div>
+                </div>`;
+            if (uCaja > 1 && precioUni > 0)
+                priceHTML += `<div class="prod-unit-price">📦 ${uCaja} u. · $${precioUni.toLocaleString('es-AR')} c/u</div>`;
+        } else if (uCaja > 1 && precioUni > 0) {
+            priceHTML = `
+                <div class="prod-price-wrap">
+                    <div class="prod-price-caja">📦 Caja (${uCaja} u.) <span>$${precioCaja.toLocaleString('es-AR')}</span></div>
+                    <div class="prod-price-unidad">🔹 Unitario <span>$${precioUni.toLocaleString('es-AR')}</span></div>
                 </div>`;
         } else {
-            priceHTML = `<div class="prod-price-wrap"><div class="prod-price">$${p.p.toLocaleString('es-AR')}</div></div>`;
+            priceHTML = `<div class="prod-price-wrap"><div class="prod-price">$${precioCaja.toLocaleString('es-AR')}</div></div>`;
         }
 
         // Offer badge in image
@@ -1354,6 +1351,28 @@ function renderPage() {
                         <button>−</button><span>1</span><button>+</button>
                     </div>
                     <button class="btn-add-disabled">No disponible</button>
+                </div>`;
+        } else if (uCaja > 1 && precioUni > 0) {
+            const spanCaja = `qty-c-${p.internalId}`;
+            const spanUni  = `qty-u-${p.internalId}`;
+            actionHTML = `
+                <div class="prod-action-dual">
+                    <div class="dual-row">
+                        <div class="qty-selector qty-sm">
+                            <button onclick="changeQty('${spanCaja}',-1)">−</button>
+                            <span id="${spanCaja}">1</span>
+                            <button onclick="changeQty('${spanCaja}',1)">+</button>
+                        </div>
+                        <button class="btn-add btn-caja" onclick="addToCartCaja(${p.internalId})">📦 Por caja</button>
+                    </div>
+                    <div class="dual-row">
+                        <div class="qty-selector qty-sm">
+                            <button onclick="changeQty('${spanUni}',-1)">−</button>
+                            <span id="${spanUni}">1</span>
+                            <button onclick="changeQty('${spanUni}',1)">+</button>
+                        </div>
+                        <button class="btn-add btn-uni" onclick="addToCartUni(${p.internalId})">🔹 Unitario</button>
+                    </div>
                 </div>`;
         } else {
             actionHTML = `
@@ -1483,17 +1502,42 @@ function changeQty(spanId, delta) {
 
 function addToCart(internalId) {
     const product = dbStock.find(p => p.internalId === internalId);
-    if (sinStock.has(product.id)) return;
-    const qty = parseInt(document.getElementById(`qty-val-${internalId}`).innerText);
-
-    // Usar precio de oferta si aplica
+    if (!product || sinStock.has(product.id)) return;
+    const qtyEl = document.getElementById(`qty-val-${internalId}`);
+    const qty = qtyEl ? parseInt(qtyEl.innerText)||1 : 1;
     const ofData = ofertas[product.id];
-    const precio = (ofData?.activa && ofData?.precio > 0) ? ofData.precio : product.p;
-
-    let existing = cart.find(i => i.producto.internalId === internalId);
+    const precio = (ofData && ofData.activa && ofData.precio > 0) ? ofData.precio : (product.pCli||product.p||0);
+    let existing = cart.find(i => i.producto.internalId === internalId && i.modo === 'unit');
     if (existing) existing.cantidad += qty;
-    else cart.push({ producto: product, precio: precio, cantidad: qty });
+    else cart.push({ producto: product, precio: precio, cantidad: qty, modo: 'unit' });
     showToast(`+ ${product.n}`);
+    actualizarBotonFlotante();
+}
+
+function addToCartCaja(internalId) {
+    const product = dbStock.find(p => p.internalId === internalId);
+    if (!product || sinStock.has(product.id)) return;
+    const qtyEl = document.getElementById(`qty-c-${internalId}`);
+    const qty = qtyEl ? parseInt(qtyEl.innerText)||1 : 1;
+    const precio = product.pCli || product.p || 0;
+    const uCaja = product.uCaja || 1;
+    let existing = cart.find(i => i.producto.internalId === internalId && i.modo === 'caja');
+    if (existing) existing.cantidad += qty;
+    else cart.push({ producto: product, precio: precio, cantidad: qty, modo: 'caja', uCaja: uCaja });
+    showToast('📦 ' + qty + ' caja' + (qty>1?'s':'') + ' de ' + product.n);
+    actualizarBotonFlotante();
+}
+
+function addToCartUni(internalId) {
+    const product = dbStock.find(p => p.internalId === internalId);
+    if (!product || sinStock.has(product.id)) return;
+    const qtyEl = document.getElementById(`qty-u-${internalId}`);
+    const qty = qtyEl ? parseInt(qtyEl.innerText)||1 : 1;
+    const precio = product.pUni > 0 ? product.pUni : (product.uCaja > 1 ? Math.round(product.pCli/product.uCaja*100)/100 : product.pCli||product.p||0);
+    let existing = cart.find(i => i.producto.internalId === internalId && i.modo === 'uni');
+    if (existing) existing.cantidad += qty;
+    else cart.push({ producto: product, precio: precio, cantidad: qty, modo: 'uni' });
+    showToast('🔹 ' + qty + ' unidad' + (qty>1?'es':'') + ' de ' + product.n);
     actualizarBotonFlotante();
 }
 
@@ -1522,9 +1566,10 @@ function openCart() {
         total += sub;
         const div = document.createElement('div');
         div.className = "cart-item";
+        const modoLabel = item.modo==='caja' ? ` <span style="font-size:10px;background:rgba(201,147,58,.2);color:#f4c060;padding:1px 5px;border-radius:4px">📦 caja</span>` : item.modo==='uni' ? ` <span style="font-size:10px;background:rgba(125,211,252,.15);color:#7dd3fc;padding:1px 5px;border-radius:4px">🔹 unid.</span>` : '';
         div.innerHTML = `
             <div class="cart-item-info">
-                <div class="cart-item-name">${item.producto.n}</div>
+                <div class="cart-item-name">${item.producto.n}${modoLabel}</div>
                 <div class="cart-item-meta">${item.cantidad} × $${item.precio.toLocaleString('es-AR')}</div>
             </div>
             <div class="cart-item-price">$${sub.toLocaleString('es-AR')}</div>
@@ -1572,9 +1617,10 @@ function buildPDF() {
         startY: 68,
         head: [['Cant.', 'Código', 'Producto', 'P. Unit.', 'Subtotal']],
         body: cart.map(i => [
-            i.cantidad, i.producto.id, i.producto.n,
-            `$${i.precio.toLocaleString('es-AR')}`,
-            `$${(i.precio * i.cantidad).toLocaleString('es-AR')}`
+            i.cantidad, i.producto.id,
+            i.producto.n + (i.modo==='caja'?' 📦':i.modo==='uni'?' 🔹':''),
+            '$'+i.precio.toLocaleString('es-AR'),
+            '$'+(i.precio*i.cantidad).toLocaleString('es-AR')
         ]),
         headStyles: { fillColor:[11,22,35], textColor:[201,147,58], fontStyle:'bold' },
         alternateRowStyles: { fillColor:[248,248,248] },
@@ -1731,6 +1777,44 @@ function abrirHistorial() {
 }
 
 function cerrarHistorial() {
+    document.getElementById("hist-panel").classList.remove("open");
+}
+
+function mostrarBotonesExtra() {
+    var btn = document.getElementById("hist-btn");
+    if (btn) btn.classList.add("visible");
+}
+
+window.addEventListener("online",  function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="none"; refreshCatalogBackground(); });
+window.addEventListener("offline", function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="flex"; });
+
+async function refreshCatalogBackground() {
+    if (!FB_EMP_KEY || !currentUser) return;
+    try {
+        var emp = await fbGet(FB_DM_EMPS+"/"+FB_EMP_KEY+".json");
+        if (!emp || !emp.productos) return;
+        var fresh = prodDesdeFirebase(emp.productos, currentUser.lista||"Clientes");
+        saveCache(FB_EMP_KEY, currentUser.lista||"Clientes", fresh);
+        dbStock = fresh;
+        applyFilters();
+    } catch(e) {}
+}
+
+// Auto-fill empresa from URL and hide field if provided
+document.addEventListener("DOMContentLoaded", function() {
+    if (EMP_URL) {
+        var wrap = document.getElementById("emp-field-wrap");
+        var inp  = document.getElementById("emp-cod-input");
+        if (inp)  inp.value = EMP_URL;
+        if (wrap) wrap.style.display = "none";
+    }
+    // Focus first visible field
+    var firstField = EMP_URL
+        ? document.getElementById("user-id")
+        : document.getElementById("emp-cod-input");
+    if (firstField) setTimeout(function(){ firstField.focus(); }, 200);
+});
+istorial() {
     document.getElementById("hist-panel").classList.remove("open");
 }
 
