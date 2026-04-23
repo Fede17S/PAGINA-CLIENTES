@@ -936,8 +936,8 @@ const CATS_DEFAULT = [
 
 // ── Firebase helpers ──────────────────────────────────────────────
 async function fbGet(url) {
-    try { const r = await fetch(url); return await r.json(); }
-    catch { return null; }
+    try { const r = await fetch(url); if(!r.ok) return null; return await r.json(); }
+    catch(e) { console.warn("fbGet error:", url, e.message); return null; }
 }
 async function fbPut(url, data) {
     try {
@@ -1052,6 +1052,7 @@ async function login() {
             isAdmin = true;
             currentUser = { id: ADMIN_ID, nom: "Federico", lista: "Clientes" };
             const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
+            if (!emp) { showToast("Error al cargar empresa — reintentá"); return; }
             empData = emp;
             // Try cache first for admin too
             const cachedAdmin = loadCache(empKey, "Clientes");
@@ -1065,6 +1066,7 @@ async function login() {
 
         // Client login — validate against usuarios node (primary) + clientesCSV (fallback)
         const emp = await fbGet(FB_DM_EMPS+"/"+empKey+".json");
+        if (!emp) { showToast("No se pudo cargar la empresa. Revisá que Firebase esté activo."); return; }
         empData = emp;
 
         // Check usuarios node first
@@ -1106,7 +1108,16 @@ async function login() {
         } else {
             showToast("ID o contraseña incorrectos");
         }
-    } catch(e) { showToast("Error de red — verificá tu conexión"); console.error(e); }
+    } catch(e) {
+        console.error("Login error:", e);
+        if (e instanceof TypeError && e.message.includes('null')) {
+            showToast("Error: No se pudo leer la empresa. Revisá las reglas de Firebase.");
+        } else if (e.name === "TypeError") {
+            showToast("Error inesperado: " + e.message);
+        } else {
+            showToast("Error de red — verificá tu conexión");
+        }
+    }
     finally { hideSpinner(); document.getElementById('status-msg').classList.add('hidden'); }
 }
 
