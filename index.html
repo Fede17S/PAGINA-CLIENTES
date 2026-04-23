@@ -547,12 +547,24 @@
         @media (max-width: 800px) {
             .sidebar { display: none; }
             .cat-tabs { display: flex; }
-            .catalog-layout { flex-direction: column; padding: 0 0 80px 0; }
-            .catalog-main { padding: 20px 14px; }
+            .catalog-layout { flex-direction: column; padding: 0 0 100px 0; }
+            .catalog-main { padding: 16px 12px; }
             .header-inner { flex-wrap: wrap; gap: 10px; }
             .header-brand { font-size: 20px; }
             .header-divider-v, #welcome-msg { display: none; }
             .search-wrap { flex: 1 1 100%; order: 3; }
+            #product-list { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+            .prod-img-container { height: 130px; padding: 10px; }
+            .prod-info { padding: 10px 12px 8px; }
+            .prod-name { font-size: 12px; height: 34px; }
+            .prod-price { font-size: 20px; }
+            .ppc-val { font-size: 14px !important; }
+            .ppu-val { font-size: 13px !important; }
+            .btn-caja, .btn-uni { font-size: 10px; padding: 7px 4px; }
+            .prod-action-dual { padding: 6px 8px 10px; gap: 5px; }
+        }
+        @media (max-width: 380px) {
+            #product-list { grid-template-columns: 1fr !important; }
         }
 
         /* ─── EMPTY STATE ───────────────────────────────────────── */
@@ -765,21 +777,58 @@
 .plan-badge-top{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;z-index:500;pointer-events:none}
 
 /* ── CAJA / UNIDAD PRICING ── */
-.prod-price-caja { font-size:14px; font-weight:700; color:var(--gold,#c9933a); display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.08) }
-.prod-price-caja span { font-size:15px; font-weight:800 }
-.prod-price-unidad { font-size:13px; font-weight:600; color:#7dd3fc; display:flex; justify-content:space-between; align-items:center; padding:4px 0 }
-.prod-price-unidad span { font-size:14px; font-weight:700 }
+.prod-price-wrap { display:flex; flex-direction:column; gap:0; width:100% }
+.prod-price-caja {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:5px 0; border-bottom:1px solid rgba(255,255,255,.07);
+}
+.prod-price-caja .ppc-label { font-size:11px; font-weight:600; color:var(--gold,#c9933a); letter-spacing:.3px; white-space:nowrap }
+.prod-price-caja .ppc-val { font-size:16px; font-weight:800; color:var(--gold2,#f4c060); font-variant-numeric:tabular-nums }
+.prod-price-unidad {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:5px 0;
+}
+.prod-price-unidad .ppu-label { font-size:11px; font-weight:600; color:#7dd3fc; letter-spacing:.3px; white-space:nowrap }
+.prod-price-unidad .ppu-val { font-size:15px; font-weight:700; color:#bae6fd; font-variant-numeric:tabular-nums }
 .prod-unit-price { font-size:11px; color:#94a3b8; margin-top:3px }
 
 /* ── DUAL ACTION ── */
-.prod-action-dual { padding:10px 12px; display:flex; flex-direction:column; gap:6px }
-.dual-row { display:flex; gap:6px; align-items:center }
-.qty-sm button { width:26px!important; height:26px!important; font-size:14px!important }
-.qty-sm span { min-width:22px!important; font-size:13px!important }
-.btn-caja { flex:1; padding:7px 8px; background:rgba(201,147,58,.15); color:#f4c060; border:1.5px solid rgba(201,147,58,.4); border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; font-family:inherit }
-.btn-caja:hover { background:rgba(201,147,58,.25); box-shadow:0 2px 8px rgba(201,147,58,.3) }
-.btn-uni  { flex:1; padding:7px 8px; background:rgba(125,211,252,.1); color:#7dd3fc; border:1.5px solid rgba(125,211,252,.3); border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; font-family:inherit }
+.prod-action-dual {
+    padding:8px 12px 12px;
+    display:flex; flex-direction:column; gap:7px;
+    border-top:1px solid rgba(255,255,255,.05);
+}
+.dual-row {
+    display:flex; gap:8px; align-items:center;
+}
+.dual-row .qty-selector {
+    flex-shrink:0;
+    padding:3px 5px;
+}
+.dual-row .qty-selector button { width:24px; height:24px; font-size:16px }
+.dual-row .qty-selector span { min-width:20px; font-size:13px }
+.btn-caja {
+    flex:1; padding:8px 6px;
+    background:rgba(201,147,58,.15); color:#f4c060;
+    border:1.5px solid rgba(201,147,58,.35); border-radius:9px;
+    font-weight:700; font-size:11px; cursor:pointer;
+    transition:all .15s; font-family:inherit;
+    letter-spacing:.5px; text-transform:uppercase;
+    white-space:nowrap; text-align:center;
+}
+.btn-caja:hover { background:rgba(201,147,58,.25); box-shadow:0 3px 10px rgba(201,147,58,.25) }
+.btn-caja:active { transform:scale(.97) }
+.btn-uni {
+    flex:1; padding:8px 6px;
+    background:rgba(125,211,252,.1); color:#7dd3fc;
+    border:1.5px solid rgba(125,211,252,.25); border-radius:9px;
+    font-weight:700; font-size:11px; cursor:pointer;
+    transition:all .15s; font-family:inherit;
+    letter-spacing:.5px; text-transform:uppercase;
+    white-space:nowrap; text-align:center;
+}
 .btn-uni:hover { background:rgba(125,211,252,.2) }
+.btn-uni:active { transform:scale(.97) }
 </style>
 </head>
 <body>
@@ -1312,8 +1361,14 @@ function renderPage() {
         } else if (uCaja > 1 && precioUni > 0) {
             priceHTML = `
                 <div class="prod-price-wrap">
-                    <div class="prod-price-caja">📦 Caja (${uCaja} u.) <span>$${precioCaja.toLocaleString('es-AR')}</span></div>
-                    <div class="prod-price-unidad">🔹 Unitario <span>$${precioUni.toLocaleString('es-AR')}</span></div>
+                    <div class="prod-price-caja">
+                        <span class="ppc-label">📦 Caja · ${uCaja} u.</span>
+                        <span class="ppc-val">$${precioCaja.toLocaleString('es-AR')}</span>
+                    </div>
+                    <div class="prod-price-unidad">
+                        <span class="ppu-label">🔹 c/u</span>
+                        <span class="ppu-val">$${precioUni.toLocaleString('es-AR')}</span>
+                    </div>
                 </div>`;
         } else {
             priceHTML = `<div class="prod-price-wrap"><div class="prod-price">$${precioCaja.toLocaleString('es-AR')}</div></div>`;
@@ -1585,7 +1640,7 @@ function openCart() {
                 <div class="cart-item-meta">${item.cantidad} × $${item.precio.toLocaleString('es-AR')}</div>
             </div>
             <div class="cart-item-price">$${sub.toLocaleString('es-AR')}</div>
-            <button class="cart-item-remove" onclick="removeItem(${item.producto.internalId})">🗑</button>
+            <button class="cart-item-remove" onclick="removeItem(${item.producto.internalId},'${item.modo||''}')">🗑</button>
         `;
         list.appendChild(div);
     });
@@ -1596,8 +1651,12 @@ function openCart() {
 function handleOverlayClick(e)      { if (e.target === document.getElementById('cart-modal'))  closeCart(); }
 function handleShareOverlayClick(e) { if (e.target === document.getElementById('share-modal')) closeShareModal(); }
 
-function removeItem(id) {
-    cart = cart.filter(i => i.producto.internalId !== id);
+function removeItem(id, modo) {
+    if (modo) {
+        cart = cart.filter(i => !(i.producto.internalId === id && i.modo === modo));
+    } else {
+        cart = cart.filter(i => i.producto.internalId !== id);
+    }
     actualizarBotonFlotante();
     if (cart.length > 0) openCart(); else closeCart();
 }
