@@ -938,8 +938,30 @@
 <div id="cart-modal" class="modal-overlay hidden" onclick="handleOverlayClick(event)">
     <div class="modal-content">
         <div class="modal-header">
-           
+            <h3>Tu pedido</h3>
+            <button class="modal-close" onclick="closeCart()">✕</button>
+        </div>
+        <div class="modal-body" id="cart-items"></div>
+        <div class="modal-footer">
+            <div class="cart-total-row">
+                <span class="cart-total-label-text">Total</span>
+                <span class="cart-total-amount">$<span id="cart-total-modal">0</span></span>
+            </div>
+            <button class="btn-whatsapp" onclick="enviarPedidoWhatsApp()">💬 Enviar por WhatsApp</button>
+            <button class="btn-download" onclick="descargarPDF()">📥 Descargar PDF</button>
+            <button class="btn-close-modal" onclick="closeCart()">Seguir comprando</button>
+        </div>
+    </div>
+</div>
 
+<!-- HISTORIAL PANEL -->
+<div id="hist-panel" class="hist-panel">
+    <div class="hist-header">
+        <div class="hist-title">Historial de pedidos</div>
+        <button onclick="cerrarHistorial()" class="modal-close">✕</button>
+    </div>
+    <div id="hist-list" class="hist-list"></div>
+</div>
 
 <script>
 const ADMIN_ID   = "Federico17s";
