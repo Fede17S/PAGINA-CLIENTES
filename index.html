@@ -947,8 +947,7 @@
                 <span class="cart-total-label-text">Total</span>
                 <span class="cart-total-amount">$<span id="cart-total-modal">0</span></span>
             </div>
-            <button class="btn-whatsapp" onclick="enviarPedidoWhatsApp()">💬 Enviar por WhatsApp</button>
-            <button class="btn-download" onclick="descargarPDF()">📥 Descargar PDF</button>
+            <button class="btn-confirm" onclick="checkout()">✅ Confirmar pedido</button>
             <button class="btn-close-modal" onclick="closeCart()">Seguir comprando</button>
         </div>
     </div>
@@ -961,6 +960,24 @@
         <button onclick="cerrarHistorial()" class="modal-close">✕</button>
     </div>
     <div id="hist-list" class="hist-list"></div>
+</div>
+
+<!-- MODAL COMPARTIR -->
+<div id="share-modal" class="modal-overlay hidden" onclick="handleShareOverlayClick(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Compartir pedido</h3>
+            <button class="modal-close" onclick="closeShareModal()">✕</button>
+        </div>
+        <div class="modal-body" style="gap:14px;padding-bottom:0">
+            <p style="font-size:14px;color:var(--muted);margin:0">Tu pedido fue generado. ¿Cómo querés enviarlo?</p>
+        </div>
+        <div class="modal-footer" style="padding-top:20px">
+            <button class="btn-whatsapp" onclick="compartirWhatsApp()">💬 Enviar por WhatsApp</button>
+            <button class="btn-download" onclick="downloadPDF()">📥 Descargar PDF</button>
+            <button class="btn-close-modal" onclick="closeShareModal()">Cerrar</button>
+        </div>
+    </div>
 </div>
 
 <script>
