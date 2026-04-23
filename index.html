@@ -894,6 +894,9 @@
 // ── Credenciales ──────────────────────────────────────────────────
 const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
+
+
+<script>
 const FB_DM      = "https://distrimar-5e1a3-default-rtdb.firebaseio.com";
 // Read empresa code from URL param ?emp=CODE, fallback to 1122
 // EMP_COD is determined at login time (see getEmpCod())
@@ -1814,44 +1817,8 @@ document.addEventListener("DOMContentLoaded", function() {
         : document.getElementById("emp-cod-input");
     if (firstField) setTimeout(function(){ firstField.focus(); }, 200);
 });
-istorial() {
-    document.getElementById("hist-panel").classList.remove("open");
-}
-
-function mostrarBotonesExtra() {
-    var btn = document.getElementById("hist-btn");
-    if (btn) btn.classList.add("visible");
-}
-
-window.addEventListener("online",  function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="none"; refreshCatalogBackground(); });
-window.addEventListener("offline", function(){ var b=document.getElementById("offline-banner"); if(b)b.style.display="flex"; });
-
-async function refreshCatalogBackground() {
-    if (!FB_EMP_KEY || !currentUser) return;
-    try {
-        var emp = await fbGet(FB_DM_EMPS+"/"+FB_EMP_KEY+".json");
-        if (!emp || !emp.productos) return;
-        var fresh = prodDesdeFirebase(emp.productos, currentUser.lista||"Clientes");
-        saveCache(FB_EMP_KEY, currentUser.lista||"Clientes", fresh);
-        dbStock = fresh;
-        applyFilters();
-    } catch(e) {}
-}
-
-// Auto-fill empresa from URL and hide field if provided
-document.addEventListener("DOMContentLoaded", function() {
-    if (EMP_URL) {
-        var wrap = document.getElementById("emp-field-wrap");
-        var inp  = document.getElementById("emp-cod-input");
-        if (inp)  inp.value = EMP_URL;
-        if (wrap) wrap.style.display = "none";
-    }
-    // Focus first visible field
-    var firstField = EMP_URL
-        ? document.getElementById("user-id")
-        : document.getElementById("emp-cod-input");
-    if (firstField) setTimeout(function(){ firstField.focus(); }, 200);
-});
 </script>
+
+
 </body>
 </html>
