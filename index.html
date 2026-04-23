@@ -890,13 +890,12 @@
     <div class="modal-content">
         <div class="modal-header">
            
-// ── Firebase ──────────────────────────────────────────────────────
-// ── Credenciales ──────────────────────────────────────────────────
-const ADMIN_ID   = "Federico17s";
-const ADMIN_PASS = "221004";
 
 
 <script>
+const ADMIN_ID   = "Federico17s";
+const ADMIN_PASS = "221004";
+
 const FB_DM      = "https://distrimar-5e1a3-default-rtdb.firebaseio.com";
 // Read empresa code from URL param ?emp=CODE, fallback to 1122
 // EMP_COD is determined at login time (see getEmpCod())
@@ -1044,7 +1043,7 @@ async function login() {
         const empCod = getEmpCod();
         if (!empCod) { showToast("Ingresá el código de empresa"); return; }
         const empKey = await buscarEmpKey(empCod);
-        if (!empKey) { showToast("Empresa '" + empCod + "' no encontrada"); return; }
+        if (!empKey) { showToast("Empresa '" + empCod + "' no encontrada en Firebase"); return; }
         FB_EMP_KEY = empKey;
 
         // Admin login
@@ -1109,13 +1108,12 @@ async function login() {
             showToast("ID o contraseña incorrectos");
         }
     } catch(e) {
-        console.error("Login error:", e);
-        if (e instanceof TypeError && e.message.includes('null')) {
-            showToast("Error: No se pudo leer la empresa. Revisá las reglas de Firebase.");
-        } else if (e.name === "TypeError") {
-            showToast("Error inesperado: " + e.message);
+        console.error("Login error:", e.name, e.message, e);
+        const msg = e.message || String(e);
+        if (msg.includes("null") || msg.includes("undefined")) {
+            showToast("Error: Firebase no tiene datos de la empresa. Revisá las reglas.");
         } else {
-            showToast("Error de red — verificá tu conexión");
+            showToast("Error de conexión: " + msg.substring(0, 60));
         }
     }
     finally { hideSpinner(); document.getElementById('status-msg').classList.add('hidden'); }
