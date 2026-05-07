@@ -1111,14 +1111,14 @@ input,select{font-family:inherit;color:inherit}
 .var-modal-box{
   background:var(--surface);
   border-radius:var(--radius-xl) var(--radius-xl) 0 0;
-  width:100%;max-width:460px;
-  max-height:85vh;overflow:hidden;
+  width:100%;max-width:560px;
+  max-height:88vh;overflow:hidden;
   display:flex;flex-direction:column;
   box-shadow:var(--shadow-lg);
   animation:slideUp .28s cubic-bezier(.22,.61,.36,1);
 }
 @media(min-width:600px){
-  .var-modal-box{border-radius:var(--radius-xl);max-height:80vh}
+  .var-modal-box{border-radius:var(--radius-xl);max-height:82vh}
 }
 @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .var-modal-header{
@@ -1131,61 +1131,97 @@ input,select{font-family:inherit;color:inherit}
   font-weight:700;font-size:15px;color:var(--ink);line-height:1.35;flex:1;
 }
 .var-modal-prod-price{
-  font-family:'Instrument Serif',serif;font-size:20px;
+  font-family:'Instrument Serif',serif;font-size:22px;
   color:var(--ink);white-space:nowrap;
 }
 .var-modal-body{
-  flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;
+  flex:1;overflow-y:auto;padding:16px 16px;
 }
 .var-modal-label{
   font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;
-  text-transform:uppercase;margin-bottom:4px;
+  text-transform:uppercase;margin-bottom:12px;
 }
-.var-row{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:10px 12px;
-  background:var(--surface-2);border:1.5px solid var(--line);
+/* Grid de cards de variantes */
+.var-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:12px;
+}
+@media(min-width:480px){ .var-grid{grid-template-columns:repeat(3,1fr)} }
+.var-card{
+  background:var(--surface);
+  border:1.5px solid var(--line);
   border-radius:var(--radius);
-  transition:border-color .15s, background .15s;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:border-color .15s, box-shadow .15s;
+  cursor:default;
 }
-.var-row.selected{
-  border-color:var(--ink);background:var(--accent-soft);
+.var-card.selected{
+  border-color:var(--ink);
+  box-shadow:0 0 0 2px var(--ink);
 }
-.var-row-name{
-  font-size:14px;font-weight:600;color:var(--ink);flex:1;
-}
-.var-qty{
-  display:inline-flex;align-items:center;
-  background:var(--surface);border:1px solid var(--line);
-  border-radius:8px;padding:2px;flex-shrink:0;
-}
-.var-qty button{
-  width:28px;height:28px;border-radius:6px;
-  font-size:16px;font-weight:600;color:var(--ink-2);
+.var-card-img{
+  height:110px;
+  background:#ffffff;
   display:flex;align-items:center;justify-content:center;
-  transition:background .12s;
+  padding:12px;
+  border-bottom:1px solid var(--line-2);
 }
-.var-qty button:hover{background:var(--surface-2)}
-.var-qty span{
-  min-width:30px;text-align:center;font-size:13px;font-weight:700;color:var(--ink);
+.var-card-img img{
+  max-width:100%;max-height:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.08));
+  transition:transform .3s ease;
+}
+.var-card:hover .var-card-img img{transform:scale(1.05)}
+.var-card-img-placeholder{
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--surface-2);
+  font-size:22px;color:var(--muted-2);
+}
+.var-card-name{
+  padding:8px 10px 4px;
+  font-size:11.5px;font-weight:700;color:var(--ink);
+  text-align:center;line-height:1.3;
+  text-transform:uppercase;letter-spacing:.02em;
+}
+.var-card-qty{
+  padding:8px 10px 10px;
+  display:flex;align-items:center;justify-content:center;gap:0;
+}
+.var-card-qty button{
+  width:32px;height:32px;
+  border-radius:8px;
+  border:1.5px solid var(--line);
+  background:var(--surface-2);
+  font-size:18px;font-weight:600;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;flex-shrink:0;
+}
+.var-card-qty button:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.var-card-qty span{
+  min-width:36px;text-align:center;
+  font-size:16px;font-weight:700;color:var(--ink);
 }
 .var-modal-footer{
-  padding:14px 20px;border-top:1px solid var(--line);flex-shrink:0;
+  padding:14px 16px;border-top:1px solid var(--line);flex-shrink:0;
   display:flex;flex-direction:column;gap:8px;
 }
 .var-modal-summary{
   font-size:12px;color:var(--muted);text-align:center;min-height:16px;
 }
 .btn-add-variantes{
-  width:100%;padding:12px;
+  width:100%;padding:13px;
   background:var(--ink);color:#fff;
-  border-radius:var(--radius);font-size:13px;font-weight:700;
+  border-radius:var(--radius);font-size:14px;font-weight:700;
   display:flex;align-items:center;justify-content:center;gap:8px;
   transition:transform .12s, box-shadow .2s;
 }
 .btn-add-variantes:hover{box-shadow:0 4px 16px rgba(20,21,26,.22)}
 .btn-add-variantes:active{transform:scale(.98)}
-.btn-add-variantes:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-add-variantes:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 /* chip en card con variantes */
 .prod-variantes-hint{
   display:inline-flex;align-items:center;gap:4px;
@@ -1464,20 +1500,23 @@ input,select{font-family:inherit;color:inherit}
 <div id="variantes-modal" class="hidden" onclick="handleVariantesOverlay(event)">
   <div class="var-modal-box">
     <div class="var-modal-header">
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="var-modal-prod-name" id="var-modal-prod-name">Producto</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">Elegí las variantes que querés pedir</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Elegí las variantes que querés pedir</div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
         <div class="var-modal-prod-price" id="var-modal-prod-price">$0</div>
-        <button onclick="cerrarVariantesModal()" style="color:var(--muted);font-size:18px;line-height:1">✕</button>
+        <button onclick="cerrarVariantesModal()" style="color:var(--muted);font-size:20px;line-height:1;padding:0">✕</button>
       </div>
     </div>
-    <div class="var-modal-body" id="var-modal-body"></div>
+    <div class="var-modal-body">
+      <div class="var-modal-label">Opciones disponibles</div>
+      <div class="var-grid" id="var-grid"></div>
+    </div>
     <div class="var-modal-footer">
       <div class="var-modal-summary" id="var-modal-summary"></div>
       <button class="btn-add-variantes" id="btn-add-variantes" onclick="confirmarVariantes()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Añadir al carrito
       </button>
     </div>
@@ -2618,13 +2657,14 @@ async function togglePromoActiva(promoId) {
 // ── VARIANTES MODAL ──
 let _varInternalId = null;
 let _varQtys = {}; // { index: qty }
-let _varNames = []; // ordered list of variant names
+let _varNames = []; // ordered list of {nombre, imagen}
 
 function abrirVariantesModal(internalId) {
     const p = dbStock.find(x => x.internalId === internalId);
     if (!p || !p.variantes || !p.variantes.length) return;
     _varInternalId = internalId;
-    _varNames = p.variantes.slice();
+    // Normalize: support both string and object formats
+    _varNames = p.variantes.map(v => typeof v === 'string' ? {nombre: v, imagen: ''} : v);
     _varQtys = {};
     _varNames.forEach((v, i) => { _varQtys[i] = 0; });
 
@@ -2635,26 +2675,32 @@ function abrirVariantesModal(internalId) {
     document.getElementById('var-modal-prod-name').textContent = p.n;
     document.getElementById('var-modal-prod-price').textContent = '$' + precio.toLocaleString('es-AR');
 
-    // Body
-    const body = document.getElementById('var-modal-body');
-    body.innerHTML = '';
-
-    const label = document.createElement('div');
-    label.className = 'var-modal-label';
-    label.textContent = 'Elegí una o más opciones:';
-    body.appendChild(label);
-
+    // Build grid
+    const grid = document.getElementById('var-grid');
+    grid.innerHTML = '';
     _varNames.forEach((v, i) => {
-        const row = document.createElement('div');
-        row.className = 'var-row';
-        row.id = 'var-row-' + i;
+        const card = document.createElement('div');
+        card.className = 'var-card';
+        card.id = 'var-card-' + i;
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'var-row-name';
-        nameEl.textContent = v;
+        const imgDiv = document.createElement('div');
+        imgDiv.className = 'var-card-img';
+        if (v.imagen) {
+            const img = document.createElement('img');
+            img.src = v.imagen;
+            img.alt = v.nombre;
+            img.onerror = function(){ this.parentElement.innerHTML = '<div class="var-card-img-placeholder">📦</div>'; };
+            imgDiv.appendChild(img);
+        } else {
+            imgDiv.innerHTML = '<div class="var-card-img-placeholder">📦</div>';
+        }
 
-        const qtyWrap = document.createElement('div');
-        qtyWrap.className = 'var-qty';
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'var-card-name';
+        nameDiv.textContent = v.nombre;
+
+        const qtyDiv = document.createElement('div');
+        qtyDiv.className = 'var-card-qty';
 
         const btnMinus = document.createElement('button');
         btnMinus.textContent = '−';
@@ -2668,13 +2714,14 @@ function abrirVariantesModal(internalId) {
         btnPlus.textContent = '+';
         btnPlus.onclick = () => changeVarQty(i, 1);
 
-        qtyWrap.appendChild(btnMinus);
-        qtyWrap.appendChild(qtySpan);
-        qtyWrap.appendChild(btnPlus);
+        qtyDiv.appendChild(btnMinus);
+        qtyDiv.appendChild(qtySpan);
+        qtyDiv.appendChild(btnPlus);
 
-        row.appendChild(nameEl);
-        row.appendChild(qtyWrap);
-        body.appendChild(row);
+        card.appendChild(imgDiv);
+        card.appendChild(nameDiv);
+        card.appendChild(qtyDiv);
+        grid.appendChild(card);
     });
 
     actualizarResumenVariantes();
@@ -2686,8 +2733,8 @@ function changeVarQty(idx, delta) {
     _varQtys[idx] = Math.max(0, (_varQtys[idx] || 0) + delta);
     const el = document.getElementById('varqty-' + idx);
     if (el) el.textContent = _varQtys[idx];
-    const row = document.getElementById('var-row-' + idx);
-    if (row) row.classList.toggle('selected', _varQtys[idx] > 0);
+    const card = document.getElementById('var-card-' + idx);
+    if (card) card.classList.toggle('selected', _varQtys[idx] > 0);
     actualizarResumenVariantes();
 }
 
@@ -2701,7 +2748,7 @@ function actualizarResumenVariantes() {
     } else {
         const lineas = Object.entries(_varQtys)
             .filter(([, q]) => q > 0)
-            .map(([i, q]) => q + '× ' + _varNames[i]).join(', ');
+            .map(([i, q]) => q + '× ' + _varNames[i].nombre).join('  ·  ');
         resumen.textContent = lineas;
         btn.disabled = false;
     }
@@ -2717,7 +2764,7 @@ function confirmarVariantes() {
     let totalVariantes = 0;
     Object.entries(_varQtys).forEach(([i, q]) => {
         if (q <= 0) return;
-        const varNombre = _varNames[i];
+        const varNombre = _varNames[i].nombre;
         const nombreCompleto = p.n + ' — ' + varNombre;
         let existing = cart.find(it => it.producto.n === nombreCompleto && it.modo === 'variante');
         if (existing) existing.cantidad += q;
