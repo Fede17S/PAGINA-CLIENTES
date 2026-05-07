@@ -1096,7 +1096,106 @@ input,select{font-family:inherit;color:inherit}
 .promo-empty-state{
   text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;
 }
+
+/* ─── VARIANTES MODAL ─── */
+#variantes-modal{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(15,16,20,.6);backdrop-filter:blur(4px);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+#variantes-modal.hidden{display:none}
+@media(min-width:600px){
+  #variantes-modal{align-items:center;padding:20px}
+}
+.var-modal-box{
+  background:var(--surface);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  width:100%;max-width:460px;
+  max-height:85vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);
+  animation:slideUp .28s cubic-bezier(.22,.61,.36,1);
+}
+@media(min-width:600px){
+  .var-modal-box{border-radius:var(--radius-xl);max-height:80vh}
+}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.var-modal-header{
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  flex-shrink:0;
+}
+.var-modal-prod-name{
+  font-weight:700;font-size:15px;color:var(--ink);line-height:1.35;flex:1;
+}
+.var-modal-prod-price{
+  font-family:'Instrument Serif',serif;font-size:20px;
+  color:var(--ink);white-space:nowrap;
+}
+.var-modal-body{
+  flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;
+}
+.var-modal-label{
+  font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;
+  text-transform:uppercase;margin-bottom:4px;
+}
+.var-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;
+  background:var(--surface-2);border:1.5px solid var(--line);
+  border-radius:var(--radius);
+  transition:border-color .15s, background .15s;
+}
+.var-row.selected{
+  border-color:var(--ink);background:var(--accent-soft);
+}
+.var-row-name{
+  font-size:14px;font-weight:600;color:var(--ink);flex:1;
+}
+.var-qty{
+  display:inline-flex;align-items:center;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:8px;padding:2px;flex-shrink:0;
+}
+.var-qty button{
+  width:28px;height:28px;border-radius:6px;
+  font-size:16px;font-weight:600;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .12s;
+}
+.var-qty button:hover{background:var(--surface-2)}
+.var-qty span{
+  min-width:30px;text-align:center;font-size:13px;font-weight:700;color:var(--ink);
+}
+.var-modal-footer{
+  padding:14px 20px;border-top:1px solid var(--line);flex-shrink:0;
+  display:flex;flex-direction:column;gap:8px;
+}
+.var-modal-summary{
+  font-size:12px;color:var(--muted);text-align:center;min-height:16px;
+}
+.btn-add-variantes{
+  width:100%;padding:12px;
+  background:var(--ink);color:#fff;
+  border-radius:var(--radius);font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .12s, box-shadow .2s;
+}
+.btn-add-variantes:hover{box-shadow:0 4px 16px rgba(20,21,26,.22)}
+.btn-add-variantes:active{transform:scale(.98)}
+.btn-add-variantes:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+/* chip en card con variantes */
+.prod-variantes-hint{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;font-weight:600;color:var(--muted);
+  margin-top:6px;padding:3px 8px;
+  background:var(--surface-2);border:1px solid var(--line);
+  border-radius:20px;
+}
 </style>
+
 </head>
 <body>
 
@@ -1361,6 +1460,30 @@ input,select{font-family:inherit;color:inherit}
   </div>
 </div>
 
+<!-- VARIANTES MODAL -->
+<div id="variantes-modal" class="hidden" onclick="handleVariantesOverlay(event)">
+  <div class="var-modal-box">
+    <div class="var-modal-header">
+      <div>
+        <div class="var-modal-prod-name" id="var-modal-prod-name">Producto</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Elegí las variantes que querés pedir</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <div class="var-modal-prod-price" id="var-modal-prod-price">$0</div>
+        <button onclick="cerrarVariantesModal()" style="color:var(--muted);font-size:18px;line-height:1">✕</button>
+      </div>
+    </div>
+    <div class="var-modal-body" id="var-modal-body"></div>
+    <div class="var-modal-footer">
+      <div class="var-modal-summary" id="var-modal-summary"></div>
+      <button class="btn-add-variantes" id="btn-add-variantes" onclick="confirmarVariantes()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Añadir al carrito
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
@@ -1486,7 +1609,8 @@ function prodDesdeFirebase(productos, lista) {
             uCaja: p.unidadesPorCaja||0,
             pUni: p.precioUnitario||0,
             img: p.foto||"",
-            categoria: p.categoria||""
+            categoria: p.categoria||"",
+            variantes: p.variantes||[]
         };
     }).filter(p => p.n && p.p > 0);
 }
@@ -1784,6 +1908,7 @@ function renderPage() {
         }
 
         let actionHTML = '';
+        const tieneVariantes = p.variantes && p.variantes.length > 0;
         if (isAdmin) {
             const cats_usadas = new Set(Object.values(categorias).filter(Boolean));
             const allCats = [...new Set([...listaCats, ...cats_usadas])];
@@ -1814,6 +1939,7 @@ function renderPage() {
                                id="ofprice-${p.id}"
                                onchange="setOfertaPrecio('${p.id}', this.value)">
                     </div>
+                    ${tieneVariantes ? `<div style="font-size:11px;color:var(--muted);padding:4px 0">🎨 ${p.variantes.length} variante(s): ${p.variantes.slice(0,3).join(', ')}${p.variantes.length>3?'…':''}</div>` : ''}
                 </div>`;
         } else if (noStock) {
             actionHTML = `
@@ -1822,6 +1948,18 @@ function renderPage() {
                         <button>−</button><span>1</span><button>+</button>
                     </div>
                     <button class="btn-add-disabled">No disponible</button>
+                </div>`;
+        } else if (tieneVariantes) {
+            // Variantes picker button
+            actionHTML = `
+                <div class="prod-action-row">
+                    <div class="prod-variantes-hint">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        ${p.variantes.length} opciones
+                    </div>
+                    <button class="btn-add" onclick="abrirVariantesModal(${p.internalId})" style="flex:1">
+                        Elegir variante
+                    </button>
                 </div>`;
         } else if (uCaja > 1 && precioUni > 0) {
             const spanCaja = `qty-c-${p.internalId}`;
@@ -2021,7 +2159,7 @@ function openCart() {
         total += sub;
         const div = document.createElement('div');
         div.className = "cart-item";
-        const modoLabel = item.modo==='caja' ? ` <span class="modo-tag">Caja</span>` : item.modo==='uni' ? ` <span class="modo-tag uni">Unid.</span>` : '';
+        const modoLabel = item.modo==='caja' ? ` <span class="modo-tag">Caja</span>` : item.modo==='uni' ? ` <span class="modo-tag uni">Unid.</span>` : item.modo==='variante' ? ` <span class="modo-tag" style="background:#ede9fe;color:#6d28d9">Var.</span>` : '';
         div.innerHTML = `
             <div class="cart-item-info">
                 <div class="cart-item-name">${item.producto.n}${modoLabel}</div>
@@ -2475,6 +2613,133 @@ async function togglePromoActiva(promoId) {
     renderPromos();
     renderAdminPromosList();
     showToast(promosCatalogo[idx].activa ? 'Promo activada' : 'Promo desactivada');
+}
+
+// ── VARIANTES MODAL ──
+let _varInternalId = null;
+let _varQtys = {}; // { index: qty }
+let _varNames = []; // ordered list of variant names
+
+function abrirVariantesModal(internalId) {
+    const p = dbStock.find(x => x.internalId === internalId);
+    if (!p || !p.variantes || !p.variantes.length) return;
+    _varInternalId = internalId;
+    _varNames = p.variantes.slice();
+    _varQtys = {};
+    _varNames.forEach((v, i) => { _varQtys[i] = 0; });
+
+    // Header
+    const ofData = ofertas[p.id];
+    const enOferta = ofData?.activa && ofData?.precio > 0;
+    const precio = enOferta ? ofData.precio : (p.pCli || p.p || 0);
+    document.getElementById('var-modal-prod-name').textContent = p.n;
+    document.getElementById('var-modal-prod-price').textContent = '$' + precio.toLocaleString('es-AR');
+
+    // Body
+    const body = document.getElementById('var-modal-body');
+    body.innerHTML = '';
+
+    const label = document.createElement('div');
+    label.className = 'var-modal-label';
+    label.textContent = 'Elegí una o más opciones:';
+    body.appendChild(label);
+
+    _varNames.forEach((v, i) => {
+        const row = document.createElement('div');
+        row.className = 'var-row';
+        row.id = 'var-row-' + i;
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'var-row-name';
+        nameEl.textContent = v;
+
+        const qtyWrap = document.createElement('div');
+        qtyWrap.className = 'var-qty';
+
+        const btnMinus = document.createElement('button');
+        btnMinus.textContent = '−';
+        btnMinus.onclick = () => changeVarQty(i, -1);
+
+        const qtySpan = document.createElement('span');
+        qtySpan.id = 'varqty-' + i;
+        qtySpan.textContent = '0';
+
+        const btnPlus = document.createElement('button');
+        btnPlus.textContent = '+';
+        btnPlus.onclick = () => changeVarQty(i, 1);
+
+        qtyWrap.appendChild(btnMinus);
+        qtyWrap.appendChild(qtySpan);
+        qtyWrap.appendChild(btnPlus);
+
+        row.appendChild(nameEl);
+        row.appendChild(qtyWrap);
+        body.appendChild(row);
+    });
+
+    actualizarResumenVariantes();
+    document.getElementById('variantes-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function changeVarQty(idx, delta) {
+    _varQtys[idx] = Math.max(0, (_varQtys[idx] || 0) + delta);
+    const el = document.getElementById('varqty-' + idx);
+    if (el) el.textContent = _varQtys[idx];
+    const row = document.getElementById('var-row-' + idx);
+    if (row) row.classList.toggle('selected', _varQtys[idx] > 0);
+    actualizarResumenVariantes();
+}
+
+function actualizarResumenVariantes() {
+    const total = Object.values(_varQtys).reduce((s, q) => s + q, 0);
+    const resumen = document.getElementById('var-modal-summary');
+    const btn = document.getElementById('btn-add-variantes');
+    if (total === 0) {
+        resumen.textContent = 'Elegí al menos 1 variante para continuar';
+        btn.disabled = true;
+    } else {
+        const lineas = Object.entries(_varQtys)
+            .filter(([, q]) => q > 0)
+            .map(([i, q]) => q + '× ' + _varNames[i]).join(', ');
+        resumen.textContent = lineas;
+        btn.disabled = false;
+    }
+}
+
+function confirmarVariantes() {
+    const p = dbStock.find(x => x.internalId === _varInternalId);
+    if (!p) return;
+    const ofData = ofertas[p.id];
+    const enOferta = ofData?.activa && ofData?.precio > 0;
+    const precio = enOferta ? ofData.precio : (p.pCli || p.p || 0);
+
+    let totalVariantes = 0;
+    Object.entries(_varQtys).forEach(([i, q]) => {
+        if (q <= 0) return;
+        const varNombre = _varNames[i];
+        const nombreCompleto = p.n + ' — ' + varNombre;
+        let existing = cart.find(it => it.producto.n === nombreCompleto && it.modo === 'variante');
+        if (existing) existing.cantidad += q;
+        else cart.push({ producto: { internalId: p.internalId + '_' + i, id: p.id, n: nombreCompleto, pCli: precio }, precio, cantidad: q, modo: 'variante' });
+        totalVariantes++;
+    });
+
+    cerrarVariantesModal();
+    actualizarBotonFlotante();
+    showToast('Añadido · ' + p.n + ' (' + totalVariantes + ' variante' + (totalVariantes > 1 ? 's' : '') + ')');
+}
+
+function cerrarVariantesModal() {
+    document.getElementById('variantes-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+    _varInternalId = null;
+    _varQtys = {};
+    _varNames = [];
+}
+
+function handleVariantesOverlay(e) {
+    if (e.target === document.getElementById('variantes-modal')) cerrarVariantesModal();
 }
 </script>
 </body>
