@@ -891,6 +891,211 @@ input,select{font-family:inherit;color:inherit}
 @media (max-width:380px){
   #product-list{grid-template-columns:1fr}
 }
+
+/* ─── PROMOS SECTION ─── */
+#promos-section{
+  margin-bottom:28px;
+  animation:fadeUp .45s cubic-bezier(.22,.61,.36,1);
+}
+.promos-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;gap:12px;flex-wrap:wrap;
+}
+.promos-header-left{display:flex;flex-direction:column;gap:2px}
+.promos-title{
+  font-family:'Instrument Serif',serif;font-size:26px;
+  color:var(--offer);letter-spacing:-.02em;line-height:1.1;
+}
+.promos-sub{font-size:12.5px;color:var(--muted);font-weight:500}
+.btn-manage-promos{
+  display:none;
+  padding:7px 13px;border-radius:9px;font-size:12px;font-weight:600;
+  background:var(--offer-soft);color:var(--offer);border:1px solid #f5d2c0;
+  gap:5px;align-items:center;transition:all .15s;white-space:nowrap;
+}
+.btn-manage-promos.visible{display:inline-flex}
+.btn-manage-promos:hover{background:#fde8da;border-color:#e8a17a}
+.promos-carousel-wrap{position:relative}
+.promos-carousel{
+  display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.promos-carousel::-webkit-scrollbar{display:none}
+.promo-card{
+  min-width:230px;max-width:230px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius-lg);overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+  scroll-snap-align:start;
+  transition:transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s, border-color .2s;
+  flex-shrink:0;
+}
+.promo-card:hover{
+  transform:translateY(-3px);
+  border-color:#f5d2c0;box-shadow:var(--shadow-md);
+}
+.promo-badges{
+  position:absolute;top:10px;left:10px;z-index:10;
+  display:flex;flex-direction:column;gap:4px;
+}
+.promo-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:20px;font-size:10px;
+  font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+}
+.badge-oferta{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-nuevo{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe}
+.badge-combo{background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe}
+.badge-promo{background:var(--offer-soft);color:var(--offer);border:1px solid #f5d2c0}
+.promo-img-container{
+  height:170px;padding:16px;
+  background:#ffffff;
+  display:flex;align-items:center;justify-content:center;
+}
+.promo-img{
+  max-width:100%;max-height:100%;
+  width:auto;height:auto;object-fit:contain;
+  transition:transform .35s ease;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.08));
+}
+.promo-card:hover .promo-img{transform:scale(1.04)}
+.promo-info{padding:12px 14px 8px;flex:1}
+.promo-name{
+  font-size:13px;font-weight:700;color:var(--ink);
+  line-height:1.35;margin-bottom:8px;
+  height:36px;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.promo-price-row{display:flex;align-items:baseline;gap:6px}
+.promo-price{
+  font-family:'Instrument Serif',serif;
+  font-size:24px;color:var(--offer);letter-spacing:-.01em;line-height:1;
+}
+.promo-price-unit{font-size:12px;color:var(--muted);font-weight:500}
+.promo-unit-info{
+  font-size:11px;color:var(--muted);margin-top:4px;
+  display:flex;align-items:center;gap:4px;
+}
+.promo-unit-info svg{opacity:.5}
+.promo-action{padding:10px 14px 14px;border-top:1px solid var(--line-2);margin-top:8px}
+.btn-add-promo{
+  width:100%;padding:9px 14px;
+  background:var(--ink);color:#fff;
+  border-radius:10px;font-size:12px;font-weight:600;
+  letter-spacing:.01em;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:transform .12s, box-shadow .2s;
+}
+.btn-add-promo:hover{box-shadow:0 4px 14px rgba(20,21,26,.2)}
+.btn-add-promo:active{transform:scale(.97)}
+.promo-carousel-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:5;
+  transition:all .15s;
+}
+.promo-carousel-arrow:hover{box-shadow:var(--shadow-md);border-color:var(--ink)}
+.promo-carousel-arrow.left{left:-14px}
+.promo-carousel-arrow.right{right:-14px}
+
+/* ─── PROMO ADMIN MODAL ─── */
+#promo-admin-modal{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(15,16,20,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+#promo-admin-modal.hidden{display:none}
+.promo-modal-box{
+  background:var(--surface);border-radius:var(--radius-xl);
+  width:100%;max-width:600px;max-height:88vh;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.promo-modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.promo-modal-header h3{
+  font-family:'Instrument Serif',serif;font-size:22px;
+  color:var(--offer);letter-spacing:-.01em;
+}
+.promo-modal-body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px}
+.promo-form{
+  background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.promo-form-title{
+  font-size:13px;font-weight:700;color:var(--ink-2);
+  margin-bottom:2px;letter-spacing:.01em;
+}
+.pf-row{display:flex;gap:10px;flex-wrap:wrap}
+.pf-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px}
+.pf-field label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.pf-input{
+  width:100%;padding:8px 11px;
+  border:1px solid var(--line);border-radius:8px;
+  font-family:inherit;font-size:13px;
+  background:var(--surface);color:var(--ink);
+  transition:border-color .15s;
+}
+.pf-input:focus{outline:none;border-color:var(--offer)}
+.pf-badges-row{display:flex;gap:8px;flex-wrap:wrap}
+.pf-badge-check{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;
+  cursor:pointer;border:1px solid var(--line);background:var(--surface);
+  transition:all .15s;user-select:none;
+}
+.pf-badge-check input{accent-color:var(--offer);width:12px;height:12px}
+.pf-badge-check:hover{border-color:var(--ink)}
+.btn-save-promo{
+  padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;
+  background:var(--offer);color:#fff;border:none;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .15s;cursor:pointer;align-self:flex-start;
+}
+.btn-save-promo:hover{filter:brightness(1.08)}
+.btn-save-promo:active{transform:scale(.97)}
+.promos-admin-list{display:flex;flex-direction:column;gap:10px}
+.promo-admin-item{
+  display:flex;gap:12px;align-items:center;
+  padding:12px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);
+}
+.promo-admin-thumb{
+  width:56px;height:56px;border-radius:8px;
+  background:#fff;border:1px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+}
+.promo-admin-thumb img{width:100%;height:100%;object-fit:contain}
+.promo-admin-info{flex:1;min-width:0}
+.promo-admin-name{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.promo-admin-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.promo-admin-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.btn-toggle-promo{
+  padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;
+  border:1px solid var(--line);background:var(--surface);
+  cursor:pointer;transition:all .15s;
+}
+.btn-toggle-promo.activa{background:var(--ok-soft);color:var(--ok);border-color:#a7f3d0}
+.btn-toggle-promo.inactiva{background:var(--surface-2);color:var(--muted)}
+.btn-del-promo{
+  width:30px;height:30px;border-radius:7px;
+  border:1px solid var(--line);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);transition:all .15s;
+}
+.btn-del-promo:hover{background:var(--danger-soft);color:var(--danger);border-color:#fca5a5}
+.promo-empty-state{
+  text-align:center;padding:30px 20px;color:var(--muted);font-size:13px;
+}
 </style>
 </head>
 <body>
@@ -975,6 +1180,10 @@ input,select{font-family:inherit;color:inherit}
   <div id="admin-info-bar" class="admin-info-bar hidden">
     <span class="pulse"></span>
     Modo administrador — Asigná categorías, marcá ofertas y controlá el stock. Los cambios se sincronizan al instante.
+    <button class="btn-manage-promos visible" onclick="abrirAdminPromos()" style="margin-left:auto;flex-shrink:0">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Gestionar Promos
+    </button>
   </div>
 
   <div class="cat-tabs" id="cat-tabs"></div>
@@ -990,6 +1199,25 @@ input,select{font-family:inherit;color:inherit}
     </aside>
 
     <main class="catalog-main">
+      <!-- PROMOS SECTION -->
+      <div id="promos-section" class="hidden">
+        <div class="promos-header">
+          <div class="promos-header-left">
+            <div class="promos-title">🏷️ Productos en Oferta</div>
+            <div class="promos-sub">Las mejores ofertas para tu negocio.</div>
+          </div>
+        </div>
+        <div class="promos-carousel-wrap">
+          <button class="promo-carousel-arrow left" onclick="scrollPromos(-1)" title="Anterior">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="promos-carousel" id="promos-carousel"></div>
+          <button class="promo-carousel-arrow right" onclick="scrollPromos(1)" title="Siguiente">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
       <div class="section-head">
         <div>
           <div class="section-title" id="section-title">Todos los productos</div>
@@ -1074,6 +1302,65 @@ input,select{font-family:inherit;color:inherit}
   </div>
 </div>
 
+<!-- PROMO ADMIN MODAL -->
+<div id="promo-admin-modal" class="hidden">
+  <div class="promo-modal-box">
+    <div class="promo-modal-header">
+      <h3>🏷️ Gestionar Promos</h3>
+      <button class="modal-close" onclick="cerrarAdminPromos()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="promo-modal-body">
+      <!-- Form nueva promo -->
+      <div class="promo-form">
+        <div class="promo-form-title">➕ Nueva promo</div>
+        <div class="pf-row">
+          <div class="pf-field" style="flex:2;min-width:180px">
+            <label>NOMBRE</label>
+            <input class="pf-input" id="pf-nombre" placeholder="ej: ¡PROMO ENERGIZER! 40AAA + 40AA">
+          </div>
+          <div class="pf-field" style="max-width:110px">
+            <label>PRECIO</label>
+            <input class="pf-input" id="pf-precio" type="number" placeholder="74390">
+          </div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-field">
+            <label>UNIDAD (texto libre)</label>
+            <input class="pf-input" id="pf-unidad" placeholder="ej: 1 un/blíster">
+          </div>
+          <div class="pf-field">
+            <label>URL IMAGEN</label>
+            <input class="pf-input" id="pf-imagen" placeholder="https://...">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:6px">BADGES</div>
+          <div class="pf-badges-row">
+            <label class="pf-badge-check"><input type="checkbox" id="pf-badge-oferta"> 🏷️ Oferta</label>
+            <label class="pf-badge-check"><input type="checkbox" id="pf-badge-nuevo"> ✨ Nuevo</label>
+            <label class="pf-badge-check"><input type="checkbox" id="pf-badge-combo"> 🎁 Combo</label>
+            <label class="pf-badge-check"><input type="checkbox" id="pf-badge-promo"> 🔥 Promo</label>
+          </div>
+        </div>
+        <input type="hidden" id="pf-editing-id">
+        <button class="btn-save-promo" onclick="guardarPromo()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="btn-save-promo-label">Agregar promo</span>
+        </button>
+      </div>
+      <!-- Lista de promos -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:10px">Promos activas / inactivas</div>
+        <div class="promos-admin-list" id="promos-admin-list">
+          <div class="promo-empty-state">No hay promos cargadas aún.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
@@ -1092,6 +1379,7 @@ function FB_STOCK()      { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/sinstock.json"; }
 function FB_CATS()       { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/catalogoCats.json"; }
 function FB_OFERTAS()    { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/ofertas.json"; }
 function FB_LISTA_CATS() { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/lista_categorias.json"; }
+function FB_PROMOS()     { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/promos_catalogo.json"; }
 
 let dbStock = [], dbCli = [], currentUser = null, cart = [];
 let isAdmin = false;
@@ -1102,6 +1390,7 @@ let ofertas    = {};
 let listaCats  = [];
 let catActiva  = "todos";
 let lastPdfBlob = null, lastPdfFilename = '';
+let promosCatalogo = []; // array de promos
 
 const CATS_DEFAULT = [
     "Pilas & Filos","Pegamentos","Consumo Masivo",
@@ -1121,13 +1410,14 @@ async function fbPut(url, data) {
 }
 
 async function cargarTodo() {
-    const [ss, cats, ofs, lc] = await Promise.all([
-        fbGet(FB_STOCK()), fbGet(FB_CATS()), fbGet(FB_OFERTAS()), fbGet(FB_LISTA_CATS())
+    const [ss, cats, ofs, lc, prs] = await Promise.all([
+        fbGet(FB_STOCK()), fbGet(FB_CATS()), fbGet(FB_OFERTAS()), fbGet(FB_LISTA_CATS()), fbGet(FB_PROMOS())
     ]);
     sinStock   = ss   ? new Set(Object.keys(ss).filter(k => ss[k]))    : new Set();
     categorias = cats || {};
     ofertas    = ofs  || {};
     listaCats  = lc   || [...CATS_DEFAULT];
+    promosCatalogo = prs ? (Array.isArray(prs) ? prs : Object.values(prs)) : [];
 }
 async function guardarSinStock() {
     const payload = {};
@@ -1137,6 +1427,7 @@ async function guardarSinStock() {
 async function guardarCategorias() { await fbPut(FB_CATS(), categorias); }
 async function guardarOfertas()    { await fbPut(FB_OFERTAS(), ofertas); }
 async function guardarListaCats()  { await fbPut(FB_LISTA_CATS(), listaCats); }
+async function guardarPromosCatalogo() { await fbPut(FB_PROMOS(), promosCatalogo); }
 
 // ── CSV ──
 function parseCSV(text) {
@@ -1297,6 +1588,7 @@ function mostrarCatalogo() {
     aplicarBrandingCatalogo();
     buildSidebar();
     applyFilters();
+    renderPromos();
 }
 
 // ── Sidebar ──
@@ -1987,6 +2279,203 @@ document.addEventListener("DOMContentLoaded", function() {
         : document.getElementById("emp-cod-input");
     if (firstField) setTimeout(function(){ firstField.focus(); }, 200);
 });
+
+// ── PROMOS CATÁLOGO ──
+function renderPromos() {
+    const section = document.getElementById('promos-section');
+    const carousel = document.getElementById('promos-carousel');
+    if (!section || !carousel) return;
+
+    const activas = promosCatalogo.filter(p => p.activa !== false);
+    if (activas.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+    section.classList.remove('hidden');
+    carousel.innerHTML = '';
+
+    activas.forEach(promo => {
+        const badgeMap = {
+            oferta: '<span class="promo-badge badge-oferta">🏷️ Oferta</span>',
+            nuevo:  '<span class="promo-badge badge-nuevo">✨ Nuevo</span>',
+            combo:  '<span class="promo-badge badge-combo">🎁 Combo</span>',
+            promo:  '<span class="promo-badge badge-promo">🔥 Promo</span>',
+        };
+        const badgesHTML = (promo.badges||[]).map(b => badgeMap[b]||'').join('');
+        const precio = parseFloat(promo.precio)||0;
+        const imgHTML = promo.imagen
+            ? `<img src="${promo.imagen}" class="promo-img" onerror="this.src='data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22%3E%3Crect width=%22120%22 height=%22120%22 fill=%22%23f4f3ef%22/%3E%3Ctext x=%2260%22 y=%2265%22 text-anchor=%22middle%22 fill=%22%23a8abb1%22 font-family=%22sans-serif%22 font-size=%2212%22%3ESin imagen%3C/text%3E%3C/svg%3E'">`
+            : `<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+
+        const card = document.createElement('div');
+        card.className = 'promo-card';
+        card.innerHTML = `
+            <div class="promo-badges">${badgesHTML}</div>
+            <div class="promo-img-container">${imgHTML}</div>
+            <div class="promo-info">
+                <div class="promo-name">${promo.nombre||'Sin nombre'}</div>
+                <div class="promo-price-row">
+                    <div class="promo-price">$${precio.toLocaleString('es-AR')}</div>
+                    <div class="promo-price-unit">/ ${promo.unidad||'unidad'}</div>
+                </div>
+                ${promo.unidad ? `<div class="promo-unit-info">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    ${promo.unidad}
+                </div>` : ''}
+            </div>
+            <div class="promo-action">
+                <button class="btn-add-promo" onclick="addPromoToCart('${promo.id}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Añadir al carrito
+                </button>
+            </div>
+        `;
+        carousel.appendChild(card);
+    });
+}
+
+function addPromoToCart(promoId) {
+    if (isAdmin) return;
+    const promo = promosCatalogo.find(p => p.id === promoId);
+    if (!promo) return;
+    const precio = parseFloat(promo.precio)||0;
+    const pseudoProd = { internalId: 'promo_'+promoId, id: promoId, n: promo.nombre||'Promo', pCli: precio };
+    let existing = cart.find(i => i.producto.internalId === 'promo_'+promoId && i.modo === 'promo');
+    if (existing) { existing.cantidad += 1; }
+    else { cart.push({ producto: pseudoProd, precio: precio, cantidad: 1, modo: 'promo' }); }
+    showToast('Añadido · ' + (promo.nombre||'Promo'));
+    actualizarBotonFlotante();
+}
+
+function scrollPromos(dir) {
+    const c = document.getElementById('promos-carousel');
+    if (c) c.scrollBy({ left: dir * 260, behavior: 'smooth' });
+}
+
+// ── ADMIN PROMOS ──
+function abrirAdminPromos() {
+    limpiarFormPromo();
+    renderAdminPromosList();
+    document.getElementById('promo-admin-modal').classList.remove('hidden');
+}
+
+function cerrarAdminPromos() {
+    document.getElementById('promo-admin-modal').classList.add('hidden');
+}
+
+function limpiarFormPromo() {
+    document.getElementById('pf-nombre').value = '';
+    document.getElementById('pf-precio').value = '';
+    document.getElementById('pf-unidad').value = '';
+    document.getElementById('pf-imagen').value = '';
+    document.getElementById('pf-badge-oferta').checked = false;
+    document.getElementById('pf-badge-nuevo').checked = false;
+    document.getElementById('pf-badge-combo').checked = false;
+    document.getElementById('pf-badge-promo').checked = false;
+    document.getElementById('pf-editing-id').value = '';
+    document.getElementById('btn-save-promo-label').textContent = 'Agregar promo';
+}
+
+function renderAdminPromosList() {
+    const container = document.getElementById('promos-admin-list');
+    if (!promosCatalogo.length) {
+        container.innerHTML = '<div class="promo-empty-state">No hay promos cargadas aún.</div>';
+        return;
+    }
+    container.innerHTML = promosCatalogo.map(p => {
+        const precio = parseFloat(p.precio)||0;
+        const badgesStr = (p.badges||[]).join(', ')||'sin badges';
+        const activa = p.activa !== false;
+        const thumbHTML = p.imagen
+            ? `<img src="${p.imagen}" onerror="this.style.display='none'">`
+            : `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+        return `
+        <div class="promo-admin-item" id="pai-${p.id}">
+            <div class="promo-admin-thumb">${thumbHTML}</div>
+            <div class="promo-admin-info">
+                <div class="promo-admin-name" title="${p.nombre||''}">${p.nombre||'Sin nombre'}</div>
+                <div class="promo-admin-meta">$${precio.toLocaleString('es-AR')} · ${p.unidad||'sin unidad'} · ${badgesStr}</div>
+            </div>
+            <div class="promo-admin-actions">
+                <button class="btn-toggle-promo ${activa?'activa':'inactiva'}" onclick="togglePromoActiva('${p.id}')">${activa?'Activa':'Inactiva'}</button>
+                <button class="btn-del-promo" onclick="editarPromo('${p.id}')" title="Editar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-del-promo" onclick="eliminarPromo('${p.id}')" title="Eliminar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function guardarPromo() {
+    const nombre = document.getElementById('pf-nombre').value.trim();
+    const precio = parseFloat(document.getElementById('pf-precio').value)||0;
+    const unidad = document.getElementById('pf-unidad').value.trim();
+    const imagen = document.getElementById('pf-imagen').value.trim();
+    const editingId = document.getElementById('pf-editing-id').value;
+
+    if (!nombre) { showToast('Ingresá un nombre para la promo'); return; }
+
+    const badges = [];
+    if (document.getElementById('pf-badge-oferta').checked) badges.push('oferta');
+    if (document.getElementById('pf-badge-nuevo').checked)  badges.push('nuevo');
+    if (document.getElementById('pf-badge-combo').checked)  badges.push('combo');
+    if (document.getElementById('pf-badge-promo').checked)  badges.push('promo');
+
+    if (editingId) {
+        const idx = promosCatalogo.findIndex(p => p.id === editingId);
+        if (idx >= 0) {
+            promosCatalogo[idx] = { ...promosCatalogo[idx], nombre, precio, unidad, imagen, badges };
+        }
+        showToast('Promo actualizada');
+    } else {
+        const newId = 'promo_' + Date.now();
+        promosCatalogo.push({ id: newId, nombre, precio, unidad, imagen, badges, activa: true });
+        showToast('Promo agregada');
+    }
+
+    await guardarPromosCatalogo();
+    renderPromos();
+    limpiarFormPromo();
+    renderAdminPromosList();
+}
+
+function editarPromo(promoId) {
+    const promo = promosCatalogo.find(p => p.id === promoId);
+    if (!promo) return;
+    document.getElementById('pf-nombre').value = promo.nombre||'';
+    document.getElementById('pf-precio').value = promo.precio||'';
+    document.getElementById('pf-unidad').value = promo.unidad||'';
+    document.getElementById('pf-imagen').value = promo.imagen||'';
+    document.getElementById('pf-badge-oferta').checked = (promo.badges||[]).includes('oferta');
+    document.getElementById('pf-badge-nuevo').checked  = (promo.badges||[]).includes('nuevo');
+    document.getElementById('pf-badge-combo').checked  = (promo.badges||[]).includes('combo');
+    document.getElementById('pf-badge-promo').checked  = (promo.badges||[]).includes('promo');
+    document.getElementById('pf-editing-id').value = promoId;
+    document.getElementById('btn-save-promo-label').textContent = 'Guardar cambios';
+    document.querySelector('.promo-modal-body').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function eliminarPromo(promoId) {
+    if (!confirm('¿Eliminar esta promo?')) return;
+    promosCatalogo = promosCatalogo.filter(p => p.id !== promoId);
+    await guardarPromosCatalogo();
+    renderPromos();
+    renderAdminPromosList();
+    showToast('Promo eliminada');
+}
+
+async function togglePromoActiva(promoId) {
+    const idx = promosCatalogo.findIndex(p => p.id === promoId);
+    if (idx < 0) return;
+    promosCatalogo[idx].activa = !promosCatalogo[idx].activa;
+    await guardarPromosCatalogo();
+    renderPromos();
+    renderAdminPromosList();
+    showToast(promosCatalogo[idx].activa ? 'Promo activada' : 'Promo desactivada');
+}
 </script>
 </body>
 </html>
