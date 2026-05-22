@@ -681,40 +681,41 @@ function LoginScreen({ onLogin }) {
     if (!code) return;
     setLoading(true);
     setError('');
-    setDebug('');
     try {
-      const url1 = `${CONFIG.DB_URL}/${CONFIG.CLIENTES_NODE}/${code}.json`;
+      const url1 = CONFIG.DB_URL + '/' + CONFIG.CLIENTES_NODE + '/' + code + '.json';
+      alert('DEBUG paso 1: consultando\n' + url1);
       const res1 = await fetch(url1);
       const raw1 = await res1.text();
+      alert('DEBUG respuesta 1:\n' + raw1.substring(0, 300));
       let data = raw1 === 'null' ? null : JSON.parse(raw1);
-      setDebug(`[1] ${url1}\n→ ${raw1.substring(0,120)}`);
 
       if (!data) {
-        const url2 = `${CONFIG.DB_URL}/${CONFIG.CLIENTES_NODE}.json`;
+        const url2 = CONFIG.DB_URL + '/' + CONFIG.CLIENTES_NODE + '.json';
+        alert('DEBUG paso 2: consultando todos los usuarios\n' + url2);
         const res2 = await fetch(url2);
         const raw2 = await res2.text();
-        setDebug(d => d + `\n\n[2] ${url2}\n→ ${raw2.substring(0,300)}`);
+        alert('DEBUG respuesta 2:\n' + raw2.substring(0, 400));
         const todos = raw2 === 'null' ? null : JSON.parse(raw2);
         if (todos) {
-          data = Object.values(todos).find(u =>
-            String(u.id) === code || String(u.pass) === code
-          ) || null;
-          setDebug(d => d + `\nEncontrado: ${data ? 'SÍ → '+JSON.stringify(data).substring(0,80) : 'NO'}`);
+          data = Object.values(todos).find(function(u) {
+            return String(u.id) === code || String(u.pass) === code;
+          }) || null;
+          alert('DEBUG encontrado por id/pass: ' + (data ? 'SI' : 'NO'));
         }
       }
 
       if (!data) {
-        setError('Código no encontrado.');
+        setError('Codigo no encontrado.');
       } else if (String(data.pass) !== code) {
-        setError(`Pass no coincide: en DB es "${data.pass}"`);
+        setError('Pass no coincide. En DB es: ' + data.pass);
       } else if (data.catalogo === false) {
-        setError('Cuenta sin acceso al catálogo.');
+        setError('Cuenta sin acceso al catalogo.');
       } else {
         onLogin(data);
       }
     } catch(err) {
+      alert('DEBUG EXCEPCION: ' + err.message);
       setError('Error: ' + err.message);
-      setDebug(d => d + '\nException: ' + err.message);
     } finally {
       setLoading(false);
     }
