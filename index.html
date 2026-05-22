@@ -1319,6 +1319,10 @@ input,select{font-family:inherit;color:inherit}
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       Gestionar Promos
     </button>
+    <button class="btn-manage-promos visible" onclick="abrirBackupPedidos()" style="margin-left:8px;flex-shrink:0;background:var(--ok-soft);color:var(--ok);border-color:#a7f0c8">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+      Backup Pedidos
+    </button>
   </div>
 
   <div class="cat-tabs" id="cat-tabs"></div>
@@ -1523,6 +1527,34 @@ input,select{font-family:inherit;color:inherit}
   </div>
 </div>
 
+<!-- BACKUP PEDIDOS PANEL (Admin) -->
+<div id="backup-pedidos-panel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:700;flex-direction:column;overflow:hidden">
+  <div style="background:var(--surface);border-bottom:1px solid var(--line);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:1">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--ok-soft);color:var(--ok)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink);letter-spacing:-.015em">Backup de Pedidos</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:1px">Todos los pedidos confirmados por los clientes</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="recargarBackupPedidos()" style="padding:8px 14px;border-radius:9px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .15s" onmouseover="this.style.background='var(--line)'" onmouseout="this.style.background='var(--surface-2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualizar
+      </button>
+      <button onclick="cerrarBackupPedidos()" style="width:34px;height:34px;border-radius:50%;background:var(--surface-2);color:var(--ink-2);display:flex;align-items:center;justify-content:center;font-size:16px;transition:background .2s" onmouseover="this.style.background='var(--line)'" onmouseout="this.style.background='var(--surface-2)'">✕</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:24px;max-width:900px;margin:0 auto;width:100%">
+    <div id="backup-pedidos-stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px"></div>
+    <div id="backup-pedidos-list" style="display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">
+        <div class="spinner-ring" style="margin:0 auto 12px"></div>Cargando pedidos…
+      </div>
+</script>
+
 <script>
 const ADMIN_ID   = "Federico17s";
 const ADMIN_PASS = "221004";
@@ -1542,6 +1574,8 @@ function FB_CATS()       { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/catalogoCats.json"
 function FB_OFERTAS()    { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/ofertas.json"; }
 function FB_LISTA_CATS() { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/lista_categorias.json"; }
 function FB_PROMOS()     { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/promos_catalogo.json"; }
+function FB_PEDIDOS_USER(userId) { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/pedidos/"+encodeURIComponent(userId).replace(/%/g,"_")+".json"; }
+function FB_PEDIDOS_ALL() { return FB_DM_EMPS+"/"+FB_EMP_KEY+"/pedidos.json"; }
 
 let dbStock = [], dbCli = [], currentUser = null, cart = [];
 let isAdmin = false;
@@ -1564,6 +1598,11 @@ const CATS_DEFAULT = [
 async function fbGet(url) {
     try { const r = await fetch(url); if(!r.ok) return null; return await r.json(); }
     catch(e) { console.warn("fbGet error:", url, e.message); return null; }
+}
+async function fbPatch(url, data) {
+    try {
+        await fetch(url, { method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data) });
+    } catch { console.warn("Error fbPatch"); }
 }
 async function fbPut(url, data) {
     try {
@@ -2288,14 +2327,29 @@ async function checkout() {
     const doc = buildPDF();
     lastPdfBlob     = doc.output('blob');
     lastPdfFilename = `pedido_${currentUser.id}_${new Date().toISOString().slice(0,10)}.pdf`;
-    // Save history
+
+    const pedidoData = {
+        fecha: new Date().toISOString(),
+        clienteId: currentUser.id,
+        clienteNom: currentUser.nom || currentUser.id,
+        items: _lastCartSnapshot.map(i=>({n:i.producto.n,c:i.cantidad,p:i.precio,m:i.modo||''})),
+        total: _lastCartSnapshot.reduce((s,i)=>s+i.precio*i.cantidad,0)
+    };
+
+    // 1) Guardar en localStorage (fallback local)
     try {
         const hist = JSON.parse(localStorage.getItem("dm_hist_"+currentUser.id)||"[]");
-        hist.unshift({ fecha: new Date().toISOString(),
-          items: _lastCartSnapshot.map(i=>({n:i.producto.n,c:i.cantidad,p:i.precio,m:i.modo})),
-          total: _lastCartSnapshot.reduce((s,i)=>s+i.precio*i.cantidad,0) });
-        localStorage.setItem("dm_hist_"+currentUser.id, JSON.stringify(hist.slice(0,10)));
+        hist.unshift(pedidoData);
+        localStorage.setItem("dm_hist_"+currentUser.id, JSON.stringify(hist.slice(0,20)));
     } catch(e) {}
+
+    // 2) Guardar en Firebase (nube — accesible desde cualquier dispositivo)
+    try {
+        const ordenKey = "p_" + Date.now();
+        const url = FB_DM_EMPS+"/"+FB_EMP_KEY+"/pedidos/"+encodeURIComponent(currentUser.id).replace(/%/g,"_")+"/"+ordenKey+".json";
+        await fbPut(url, pedidoData);
+    } catch(e) { console.warn("No se pudo guardar pedido en nube:", e); }
+
     cart = []; actualizarBotonFlotante(); closeCart();
     document.getElementById('share-modal').classList.remove('hidden');
 }
@@ -2388,9 +2442,31 @@ function aplicarBrandingCatalogo(){
   }
 }
 
-function abrirHistorial() {
-    const hist = JSON.parse(localStorage.getItem("dm_hist_"+(currentUser&&currentUser.id||""))||"[]");
+async function abrirHistorial() {
     const list = document.getElementById("hist-list");
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">
+        <div class="spinner-ring" style="margin:0 auto 12px"></div>Cargando historial…</div>`;
+    document.getElementById("hist-panel").classList.add("open");
+
+    let hist = [];
+
+    // 1) Intentar cargar desde Firebase (nube)
+    try {
+        const cloudData = await fbGet(FB_PEDIDOS_USER(currentUser.id));
+        if (cloudData && typeof cloudData === 'object') {
+            const arr = Object.values(cloudData);
+            arr.sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            hist = arr;
+        }
+    } catch(e) { console.warn("Error cargando historial nube:", e); }
+
+    // 2) Fallback a localStorage si la nube no tiene datos
+    if (!hist.length) {
+        try {
+            hist = JSON.parse(localStorage.getItem("dm_hist_"+(currentUser&&currentUser.id||""))||"[]");
+        } catch(e) {}
+    }
+
     if (!hist.length) {
         list.innerHTML = `<div class="empty-state" style="grid-column:auto;padding:60px 20px">
           <div class="empty-state-icon">
@@ -2402,11 +2478,11 @@ function abrirHistorial() {
     } else {
         list.innerHTML = hist.map(function(h,i) {
             var fecha = new Date(h.fecha).toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-            var productos = h.items.map(function(it){
+            var productos = (h.items||[]).map(function(it){
               var tag = it.m==='caja' ? ' (caja)' : it.m==='uni' ? ' (u.)' : '';
               return it.c+"× "+it.n+tag;
             }).join("  ·  ");
-            var total = h.items.reduce(function(s,it){return s+it.c*it.p;},0);
+            var total = (h.items||[]).reduce(function(s,it){return s+(it.c||0)*(it.p||0);},0);
             return "<div class='hist-item'>"+
                 "<div class='hist-meta'>"+
                   "<span class='hist-num'>Pedido #"+(hist.length-i)+"</span>"+
@@ -2417,7 +2493,6 @@ function abrirHistorial() {
             "</div>";
         }).join("");
     }
-    document.getElementById("hist-panel").classList.add("open");
 }
 
 function cerrarHistorial() {
@@ -2787,6 +2862,110 @@ function cerrarVariantesModal() {
 
 function handleVariantesOverlay(e) {
     if (e.target === document.getElementById('variantes-modal')) cerrarVariantesModal();
+}
+
+// ── BACKUP PEDIDOS (Admin) ──
+async function abrirBackupPedidos() {
+    if (!isAdmin) return;
+    const panel = document.getElementById('backup-pedidos-panel');
+    panel.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    await recargarBackupPedidos();
+}
+
+function cerrarBackupPedidos() {
+    const panel = document.getElementById('backup-pedidos-panel');
+    panel.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+async function recargarBackupPedidos() {
+    const listEl  = document.getElementById('backup-pedidos-list');
+    const statsEl = document.getElementById('backup-pedidos-stats');
+    listEl.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">
+        <div class="spinner-ring" style="margin:0 auto 12px"></div>Cargando pedidos…</div>`;
+    statsEl.innerHTML = '';
+
+    let todosPedidos = [];
+    try {
+        const data = await fbGet(FB_PEDIDOS_ALL());
+        if (data && typeof data === 'object') {
+            // data = { userId: { p_ts: {pedido}, ... }, ... }
+            Object.entries(data).forEach(([userId, userPedidos]) => {
+                if (userPedidos && typeof userPedidos === 'object') {
+                    Object.values(userPedidos).forEach(pedido => {
+                        if (pedido && pedido.fecha) {
+                            todosPedidos.push({ ...pedido, _uid: userId });
+                        }
+                    });
+                }
+            });
+            todosPedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        }
+    } catch(e) {
+        listEl.innerHTML = `<div style="text-align:center;padding:40px;color:var(--danger);font-size:13px">Error al cargar pedidos: ${e.message}</div>`;
+        return;
+    }
+
+    if (!todosPedidos.length) {
+        listEl.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:13px">
+            <div style="font-size:32px;margin-bottom:12px">📭</div>
+            <div style="font-weight:600;margin-bottom:4px">Sin pedidos aún</div>
+            <div>Cuando los clientes confirmen pedidos, aparecerán acá.</div></div>`;
+        return;
+    }
+
+    // Stats
+    const totalGeneral = todosPedidos.reduce((s, p) => s + (p.total || 0), 0);
+    const clientes = new Set(todosPedidos.map(p => p.clienteId || p._uid)).size;
+    statsEl.innerHTML = [
+        { label: 'Total pedidos', value: todosPedidos.length, color: '#1a1b1f', bg: '#f4f3ef' },
+        { label: 'Clientes únicos', value: clientes, color: '#0c648e', bg: '#e0f0fb' },
+        { label: 'Monto acumulado', value: '$' + totalGeneral.toLocaleString('es-AR', {minimumFractionDigits:0}), color: '#0f8a4a', bg: '#e8f5ee' }
+    ].map(s => `<div style="flex:1;min-width:140px;background:${s.bg};border-radius:12px;padding:14px 18px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:${s.color};opacity:.7;margin-bottom:5px">${s.label}</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:26px;color:${s.color};letter-spacing:-.01em">${s.value}</div>
+    </div>`).join('');
+
+    // Pedidos agrupados por cliente
+    const porCliente = {};
+    todosPedidos.forEach(p => {
+        const key = p.clienteId || p._uid || 'desconocido';
+        if (!porCliente[key]) porCliente[key] = { nom: p.clienteNom || key, pedidos: [] };
+        porCliente[key].pedidos.push(p);
+    });
+
+    listEl.innerHTML = Object.entries(porCliente).map(([uid, grupo]) => {
+        const totalCliente = grupo.pedidos.reduce((s, p) => s + (p.total||0), 0);
+        const pedidosHTML = grupo.pedidos.map((p, i) => {
+            const fecha = new Date(p.fecha).toLocaleDateString("es-AR",{weekday:"short",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+            const items = (p.items||[]).map(it => {
+                const tag = it.m==='caja' ? ' <span style="font-size:10px;background:#f4f3ef;padding:1px 5px;border-radius:4px">caja</span>'
+                           : it.m==='uni' ? ' <span style="font-size:10px;background:#e0f0fb;padding:1px 5px;border-radius:4px;color:#0c648e">u.</span>' : '';
+                return `<span style="white-space:nowrap">${it.c}× ${it.n}${tag}</span>`;
+            }).join(' <span style="color:var(--muted-2)">·</span> ');
+            const total = (p.items||[]).reduce((s,it)=>s+(it.c||0)*(it.p||0), 0);
+            return `<div style="padding:12px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:12px">
+                    <span style="font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase">Pedido #${grupo.pedidos.length - i}</span>
+                    <span style="font-size:12px;color:var(--muted)">${fecha}</span>
+                </div>
+                <div style="font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:4px">${items}</div>
+                <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--ink)">$${total.toLocaleString("es-AR",{minimumFractionDigits:0})}</div>
+            </div>`;
+        }).join('');
+
+        return `<div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden">
+            <div style="padding:14px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px">
+                <div>
+                    <div style="font-weight:700;font-size:14px;color:var(--ink)">${grupo.nom}</div>
+                    <div style="font-size:11.5px;color:var(--muted);margin-top:2px">ID: ${uid} &nbsp;·&nbsp; ${grupo.pedidos.length} pedido${grupo.pedidos.length>1?'s':''}</div>
+                </div>
+                <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--ok);letter-spacing:-.01em">$${totalCliente.toLocaleString("es-AR",{minimumFractionDigits:0})}</div>
+            </div>
+            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px">${pedidosHTML}</div>
+        </div>`;
+    }).join('');
 }
 </script>
 </body>
