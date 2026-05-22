@@ -59,6 +59,21 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,select{font-family:inherit;color:inherit}
 ::selection{background:var(--ink);color:#fff}
 
+/* ─── FORZAR TEXTO NEGRO (override empresa color) ─── */
+.prod-name, .prod-code, .prod-price, .prod-price.oferta-price,
+.ppc-val, .ppu-val, .prod-unit-price, .prod-price-original,
+.section-title, .section-title.ofertas-title,
+.hist-total, .hist-products, .hist-num, .hist-date,
+.cart-item-name, .cart-item-meta, .cart-item-price,
+.cart-total-amount, .promo-name, .promo-price,
+.cat-label, .cat-count, .sidebar-title,
+.header-brand, #welcome-msg, #welcome-msg b,
+.modal-header h3, .hist-title,
+.login-title, .login-sub,
+.section-meta, .prod-price-row span {
+  color: #000000 !important;
+}
+
 /* ─── OFFLINE BANNER ─── */
 #offline-banner{
   display:none;position:fixed;top:0;left:0;right:0;z-index:999;
@@ -2415,10 +2430,10 @@ function showSuspended(msg) {
 
 function aplicarBrandingCatalogo(){
   var emp = empData || {};
+  // El color de empresa se aplica solo al acento (botones), no al texto
   if(emp.color){
     document.documentElement.style.setProperty('--accent', emp.color);
-    document.documentElement.style.setProperty('--ink', emp.color);
-    // recompute mark color
+    // --ink y --muted se mantienen en negro para máximo contraste
   }
   var appName = emp.appname || emp.nombre || "Catálogo";
   document.title = appName;
