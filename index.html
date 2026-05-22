@@ -681,7 +681,19 @@ function LoginScreen({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      const data = await fbGet(`${CONFIG.CLIENTES_NODE}/${code}`);
+      // Primero intenta por clave directa (ej: /usuarios/3829)
+      let data = await fbGet(`${CONFIG.CLIENTES_NODE}/${code}`);
+
+      // Si no está por clave, busca en todos los usuarios por campo id o pass
+      if (!data) {
+        const todos = await fbGet(CONFIG.CLIENTES_NODE);
+        if (todos) {
+          data = Object.values(todos).find(u =>
+            String(u.id) === code || String(u.pass) === code
+          ) || null;
+        }
+      }
+
       if (!data) {
         setError('Código no encontrado. Verificá e intentá de nuevo.');
       } else if (String(data.pass) !== code) {
