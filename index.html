@@ -2920,8 +2920,8 @@ async function recargarBackupPedidos() {
     const clientes = new Set(todosPedidos.map(p => p.clienteId || p._uid)).size;
     statsEl.innerHTML = [
         { label: 'Total pedidos', value: todosPedidos.length, color: '#1a1b1f', bg: '#f4f3ef' },
-        { label: 'Clientes únicos', value: clientes, color: '#0c648e', bg: '#e0f0fb' },
-        { label: 'Monto acumulado', value: '$' + totalGeneral.toLocaleString('es-AR', {minimumFractionDigits:0}), color: '#0f8a4a', bg: '#e8f5ee' }
+        { label: 'Clientes únicos', value: clientes, color: '#1a1b1f', bg: '#e0f0fb' },
+        { label: 'Monto acumulado', value: '$' + totalGeneral.toLocaleString('es-AR', {minimumFractionDigits:0}), color: '#1a1b1f', bg: '#e8f5ee' }
     ].map(s => `<div style="flex:1;min-width:140px;background:${s.bg};border-radius:12px;padding:14px 18px">
         <div style="font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:${s.color};opacity:.7;margin-bottom:5px">${s.label}</div>
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:${s.color};letter-spacing:-.01em">${s.value}</div>
