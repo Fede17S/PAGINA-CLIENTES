@@ -1430,6 +1430,29 @@ input,select{font-family:inherit;color:inherit}
   <div id="hist-list" class="hist-list"></div>
 </div>
 
+<!-- MODAL TIPO COMPROBANTE (Factura A / Remito) -->
+<div id="comprobante-modal" class="modal-overlay hidden" onclick="if(event.target===this)cerrarComprobante()">
+  <div class="modal-content" style="max-width:360px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">🧾</div>
+    <h3 style="margin:0 0 6px">¿Con qué comprobante?</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5">Tu pedido está listo. Elegí si necesitás Factura A o solo Remito.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <div style="background:#f4f3ef;border:1.5px solid #e8e6e0;border-radius:10px;padding:14px 10px">
+        <div style="font-size:10px;font-weight:700;color:#7e8189;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Solo Remito</div>
+        <div id="popup-precio-remito" style="font-size:20px;font-weight:800;color:#1a1b1f">$0</div>
+      </div>
+      <div style="background:#fff8e1;border:1.5px solid #ffe082;border-radius:10px;padding:14px 10px">
+        <div style="font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Con IVA 21%</div>
+        <div id="popup-precio-iva" style="font-size:20px;font-weight:800;color:#1e2a4a">$0</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="confirmarComprobante('factura_a')" style="width:100%;padding:14px;border-radius:10px;background:#1e2a4a;color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">🟦 Factura A (con IVA)</button>
+      <button onclick="confirmarComprobante('remito')" style="width:100%;padding:14px;border-radius:10px;background:#f4f3ef;color:#1a1b1f;border:1.5px solid #e8e6e0;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation">📄 Solo Remito</button>
+    </div>
+  </div>
+</div>
+
 <!-- SHARE MODAL -->
 <div id="share-modal" class="modal-overlay hidden" onclick="handleShareOverlayClick(event)">
   <div class="modal-content">
@@ -2432,36 +2455,107 @@ function buildPDF() {
 }
 
 let _lastCartSnapshot = [];
+let _checkoutPendiente = null;
 
 async function checkout() {
     if (!cart.length) return;
     _lastCartSnapshot = cart.map(i => ({...i}));
-    const doc = buildPDF();
-    lastPdfBlob     = doc.output('blob');
-    lastPdfFilename = `pedido_${currentUser.id}_${new Date().toISOString().slice(0,10)}.pdf`;
+    const total    = _lastCartSnapshot.reduce((s,i)=>s+i.precio*i.cantidad, 0);
+    const totalIVA = Math.round(total * 1.21 * 100) / 100;
 
-    const pedidoData = {
-        fecha:      new Date().toISOString(),
+    // Mostrar precios en el popup
+    const fmtARS = v => v.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('popup-precio-remito').textContent = '$'+fmtARS(total);
+    document.getElementById('popup-precio-iva').textContent    = '$'+fmtARS(totalIVA);
+
+    // Guardar datos del pedido para después de la elección
+    _checkoutPendiente = {
+        total:    total,
+        totalIVA: totalIVA,
+        items:    _lastCartSnapshot,
+        fecha:    new Date().toISOString(),
         clienteId:  currentUser.id,
         clienteNom: currentUser.nom || currentUser.id,
-        lista:      currentUser.lista || "Clientes",
-        items:      _lastCartSnapshot.map(i=>({n:i.producto.n,c:i.cantidad,p:i.precio,m:i.modo||''})),
-        total:      _lastCartSnapshot.reduce((s,i)=>s+i.precio*i.cantidad,0)
+        lista:      currentUser.lista || "Clientes"
     };
 
-    // 1) Guardar en localStorage (historial local del cliente)
+    // Cerrar carrito y mostrar popup de comprobante
+    closeCart();
+    document.getElementById('comprobante-modal').classList.remove('hidden');
+}
+
+function cerrarComprobante() {
+    document.getElementById('comprobante-modal').classList.add('hidden');
+}
+
+async function confirmarComprobante(tipo) {
+    cerrarComprobante();
+    if (!_checkoutPendiente) return;
+    const pd = _checkoutPendiente;
+    _checkoutPendiente = null;
+    const esFactura = tipo === 'factura_a';
+    const totalFinal = esFactura ? pd.totalIVA : pd.total;
+
+    // Generar PDF según el tipo elegido
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const hora  = ahora.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    const empNombre = (empData && (empData.nombre||empData.appname)) || "Catálogo";
+    const empSlogan = (empData && empData.slogan) || "Pedido de cliente";
+    const iva = esFactura ? 1.21 : 1;
+
+    doc.setFontSize(20); doc.setTextColor(20,21,26); doc.text(empNombre.toUpperCase()+(esFactura?' — FACTURA A':''), 20, 22);
+    doc.setFontSize(10); doc.setTextColor(120,130,140); doc.text(esFactura ? 'Precios incluyen IVA 21%' : empSlogan, 20, 29);
+    doc.setDrawColor(20,21,26); doc.line(20,33,190,33);
+    doc.setFontSize(11); doc.setTextColor(30,41,59);
+    doc.text('Cliente: '+currentUser.nom, 20, 42);
+    doc.text('ID: '+currentUser.id, 20, 50);
+    doc.text('Fecha: '+fecha+'  |  Hora: '+hora, 20, 58);
+    doc.setDrawColor(220,220,220); doc.line(20,63,190,63);
+
+    const headCol = esFactura ? ['Cant.','Código','Producto','P.U. c/IVA','Subtotal'] : ['Cant.','Código','Producto','P. Unit.','Subtotal'];
+    doc.autoTable({
+        startY: 68,
+        head: [headCol],
+        body: pd.items.map(i => [
+            i.cantidad, i.producto.id,
+            i.producto.n+(i.modo==='caja'?' (caja)':i.modo==='uni'?' (unidad)':''),
+            '$'+Math.round(i.precio*iva*100/100).toLocaleString('es-AR'),
+            '$'+Math.round(i.precio*iva*i.cantidad*100/100).toLocaleString('es-AR')
+        ]),
+        headStyles: { fillColor:[20,21,26], textColor:[255,255,255], fontStyle:'bold' },
+        footStyles: { fillColor:[20,21,26], textColor:[255,255,255], fontStyle:'bold', fontSize:11 },
+        foot: [['','','',esFactura?'TOTAL c/IVA:':'TOTAL:','$'+totalFinal.toLocaleString('es-AR')]],
+        alternateRowStyles: { fillColor:[248,248,245] },
+        styles: { fontSize:10 },
+        columnStyles: { 0:{halign:'center',cellWidth:15}, 1:{cellWidth:25}, 3:{halign:'right',cellWidth:30}, 4:{halign:'right',cellWidth:30} }
+    });
+    doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.setTextColor(160,160,160);
+    doc.text(empNombre+' — Pedido generado automáticamente', 105, 285, {align:'center'});
+
+    lastPdfBlob     = doc.output('blob');
+    lastPdfFilename = (esFactura?'facturaA_':'pedido_')+currentUser.id+'_'+ahora.toISOString().slice(0,10)+'.pdf';
+
+    // Guardar en Supabase
+    const pedidoData = {
+        fecha:       pd.fecha,
+        clienteId:   pd.clienteId,
+        clienteNom:  pd.clienteNom,
+        lista:       pd.lista,
+        items:       pd.items.map(i=>({n:i.producto.n,c:i.cantidad,p:esFactura?Math.round(i.precio*1.21*100)/100:i.precio,m:i.modo||''})),
+        total:       totalFinal,
+        tipoComprobante: tipo
+    };
     try {
-        const hist = JSON.parse(localStorage.getItem("dm_hist_"+currentUser.id)||"[]");
+        const hist = JSON.parse(localStorage.getItem('dm_hist_'+currentUser.id)||'[]');
         hist.unshift(pedidoData);
-        localStorage.setItem("dm_hist_"+currentUser.id, JSON.stringify(hist.slice(0,20)));
-    } catch(e) {}
+        localStorage.setItem('dm_hist_'+currentUser.id, JSON.stringify(hist.slice(0,20)));
+    } catch(e){}
+    try { await sbGuardarPedido(pedidoData); } catch(e){ console.warn('Supabase pedido error:', e); }
 
-    // 2) Guardar en Supabase → aparece en Backup Pedidos del admin
-    try {
-        await sbGuardarPedido(pedidoData);
-    } catch(e) { console.warn("No se pudo guardar pedido en Supabase:", e); }
-
-    cart = []; actualizarBotonFlotante(); closeCart();
+    cart = []; actualizarBotonFlotante();
     document.getElementById('share-modal').classList.remove('hidden');
 }
 
