@@ -2170,7 +2170,7 @@ function renderPage() {
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         ${p.variantes.length} opciones
                     </div>
-                    <button class="btn-add" onclick="abrirVariantesModal(${p.internalId})" style="flex:1">
+                    <button class="btn-add" onclick="abrirVariantesModal('${p.internalId}')" style="flex:1">
                         Elegir variante
                     </button>
                 </div>`;
@@ -2185,7 +2185,7 @@ function renderPage() {
                             <span id="${spanCaja}">1</span>
                             <button onclick="changeQty('${spanCaja}',1)">+</button>
                         </div>
-                        <button class="btn-caja" onclick="addToCartCaja(${p.internalId})">Añadir caja</button>
+                        <button class="btn-caja" onclick="addToCartCaja('${p.internalId}')">Añadir caja</button>
                     </div>
                     <div class="dual-row">
                         <div class="qty-selector">
@@ -2193,7 +2193,7 @@ function renderPage() {
                             <span id="${spanUni}">1</span>
                             <button onclick="changeQty('${spanUni}',1)">+</button>
                         </div>
-                        <button class="btn-uni" onclick="addToCartUni(${p.internalId})">Por unidad</button>
+                        <button class="btn-uni" onclick="addToCartUni('${p.internalId}')">Por unidad</button>
                     </div>
                 </div>`;
         } else {
@@ -2204,7 +2204,7 @@ function renderPage() {
                         <span id="${spanId}">1</span>
                         <button onclick="changeQty('${spanId}',1)">+</button>
                     </div>
-                    <button class="btn-add" onclick="addToCart(${p.internalId})">Añadir</button>
+                    <button class="btn-add" onclick="addToCart('${p.internalId}')">Añadir</button>
                 </div>`;
         }
 
@@ -2379,7 +2379,7 @@ function openCart() {
                 <div class="cart-item-meta">${item.cantidad} × $${item.precio.toLocaleString('es-AR')}</div>
             </div>
             <div class="cart-item-price">$${sub.toLocaleString('es-AR')}</div>
-            <button class="cart-item-remove" onclick="removeItem(${item.producto.internalId},'${item.modo||''}')" title="Quitar">
+            <button class="cart-item-remove" onclick="removeItem('${item.producto.internalId}','${item.modo||''}')" title="Quitar">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
         `;
